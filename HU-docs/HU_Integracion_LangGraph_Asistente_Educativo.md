@@ -87,8 +87,6 @@ class LearningAssistantState(TypedDict):
 
 No se implementara en esta fase:
 
-- Sistema de tickets.
-- Escalado a humano.
 - Checkpointing con SQLite.
 - MultiQueryRetriever.
 - Memoria conversacional persistente.
@@ -113,10 +111,3 @@ Estos elementos podrian considerarse en historias de usuario futuras.
 | Romper el flujo actual de Streamlit | Mantener `app.py` casi igual y encapsular LangGraph en una capa nueva. |
 | Mezclar clasificacion con recuperacion | Separar cada responsabilidad en nodos independientes. |
 | Duplicar logica existente | Reutilizar `DiagnosticRAG` y el prompt actual cuando sea posible. |
-| Falta de pruebas | Agregar pruebas minimas despues de estabilizar el grafo. |
-
-## 11. Resultado esperado
-
-Al finalizar esta HU, el proyecto `IA-Lanchaing` tendra un primer flujo con LangGraph capaz de orquestar las consultas del asistente educativo.
-
-El usuario seguira interactuando desde Streamlit, pero internamente la respuesta sera procesada mediante un grafo con nodos especializados, permitiendo una evolucion mas ordenada del proyecto.
