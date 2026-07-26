@@ -10,18 +10,128 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+        :root {
+            --color-celeste: #95D1DC;
+            --color-menta: #E7F0EA;
+            --color-azul: #1A77A3;
+            --color-azul-oscuro: #155F82;
+            --color-superficie: #F7FBFA;
+            --color-texto: #173642;
+        }
+
+        .stApp {
+            background: var(--color-superficie);
+            color: var(--color-texto);
+        }
+
+        [data-testid="stHeader"],
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"],
+        [data-testid="stBottom"] {
+            background: var(--color-superficie) !important;
+        }
+
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"],
+        [data-testid="stBottom"] > div,
+        [data-testid="stBottom"] > div > div,
+        [data-testid="stBottom"] section,
+        [data-testid="stBottom"] form,
+        .stChatFloatingInputContainer,
+        div:has(> [data-testid="stChatInput"]),
+        div:has([data-testid="stChatInput"]) {
+            background: var(--color-superficie) !important;
+        }
+
+        h1, h2, h3 {
+            color: var(--color-azul);
+        }
+
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
+            border-right: 4px solid var(--color-celeste);
+        }
+
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] .stMarkdown strong {
+            color: var(--color-azul);
+        }
+
+        .stButton > button {
+            background-color: var(--color-azul);
+            border: 1px solid var(--color-azul);
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        .stButton > button:hover {
+            background-color: var(--color-azul-oscuro);
+            border-color: var(--color-azul-oscuro);
+            color: #FFFFFF;
+        }
+
+        [data-testid="stAlert"] {
+            border-radius: 8px;
+            border-left: 5px solid var(--color-celeste);
+        }
+
+        [data-testid="stChatMessage"] {
+            background-color: rgba(231, 240, 234, 0.52);
+            border-left: 5px solid var(--color-celeste);
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        [data-testid="stChatMessage"]:has(
+            [data-testid="chatAvatarIcon-user"]
+        ) {
+            border-left-color: var(--color-azul);
+        }
+
+        [data-testid="stChatInput"] {
+            background: var(--color-superficie) !important;
+            border-top: 0;
+            padding-bottom: 0.75rem;
+        }
+
+        [data-testid="stChatInput"] > div {
+            background-color: var(--color-superficie) !important;
+            border: 2px solid var(--color-celeste) !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stChatInput"] textarea {
+            background-color: var(--color-superficie) !important;
+            color: var(--color-texto) !important;
+        }
+
+        [data-testid="stChatInput"] button {
+            color: var(--color-azul) !important;
+        }
+
+        hr {
+            border-color: rgba(26, 119, 163, 0.22);
+        }
+
+        .palette-footer {
+            color: var(--color-azul);
+            font-weight: 600;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "tono_asistente" not in st.session_state:
-    st.session_state.tono_asistente = (
-        "Útil y amigable"
-    )
-
-if "modo_aprendizaje" not in st.session_state:
-    st.session_state.modo_aprendizaje = (
-        "Aprendizaje guiado"
-    )
+DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
+DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
 
 def diagnostic_is_configured() -> bool:
@@ -113,101 +223,12 @@ with st.sidebar:
 
     st.divider()
 
- 
-    st.markdown("**🎭 Tono del asistente:**")
-
-    tone_descriptions = {
-        "Útil y amigable": (
-            "Responde de manera clara, amable "
-            "y fácil de entender."
-        ),
-        "Profesional y formal": (
-            "Responde con un lenguaje serio, "
-            "ordenado y académico."
-        ),
-        "Casual y relajado": (
-            "Responde de forma natural, "
-            "cercana y sencilla."
-        ),
-        "Experto técnico": (
-            "Responde con mayor profundidad "
-            "técnica y precisión."
-        ),
-        "Creativo y divertido": (
-            "Responde usando ejemplos "
-            "creativos y analogías."
-        ),
-    }
-
-    selected_tone = st.selectbox(
-        "Selecciona el tono del asistente",
-        options=list(
-            tone_descriptions.keys()
-        ),
-        index=list(
-            tone_descriptions.keys()
-        ).index(
-            st.session_state.tono_asistente
-        ),
-        key="tone_selector",
-    )
-
-    st.session_state.tono_asistente = (
-        selected_tone
-    )
+    st.markdown("**🎓 Modo de aprendizaje:**")
 
     st.info(
-        tone_descriptions[selected_tone]
-    )
-
-    st.divider()
-
-
-    st.markdown(
-        "**🎓 Modo de aprendizaje:**"
-    )
-
-    learning_modes = {
-        "Aprendizaje guiado": (
-            "Te orientará mediante preguntas "
-            "y pistas, sin entregar inmediatamente "
-            "la solución."
-        ),
-        "Explicación conceptual": (
-            "Explicará el tema, mostrará un ejemplo "
-            "y comprobará tu comprensión."
-        ),
-        "Revisión de código": (
-            "Analizará tu código y te ayudará "
-            "a descubrir y corregir los errores."
-        ),
-        "Solución de referencia": (
-            "Mostrará una solución completa "
-            "con una explicación detallada."
-        ),
-    }
-
-    selected_learning_mode = st.selectbox(
-        "Selecciona cómo quieres aprender",
-        options=list(
-            learning_modes.keys()
-        ),
-        index=list(
-            learning_modes.keys()
-        ).index(
-            st.session_state.modo_aprendizaje
-        ),
-        key="learning_mode_selector",
-    )
-
-    st.session_state.modo_aprendizaje = (
-        selected_learning_mode
-    )
-
-    st.info(
-        learning_modes[
-            selected_learning_mode
-        ]
+        "Aprendizaje guiado: el asistente orienta paso a paso "
+        "con preguntas y pistas, sin entregar la solución completa "
+        "de inmediato."
     )
 
     st.divider()
@@ -296,14 +317,8 @@ if user_input:
         response, diagnostic_sources = (
             ask_assistant(
                 question=user_input,
-                tono=(
-                    st.session_state
-                    .tono_asistente
-                ),
-                modo_aprendizaje=(
-                    st.session_state
-                    .modo_aprendizaje
-                ),
+                tono=DEFAULT_ASSISTANT_TONE,
+                modo_aprendizaje=DEFAULT_LEARNING_MODE,
             )
         )
 
@@ -325,7 +340,7 @@ st.divider()
 
 st.markdown(
     """
-    <div style="text-align: center; color: #777;">
+    <div class="palette-footer" style="text-align: center;">
         💻 Asistente educativo con RAG diagnóstico
     </div>
     """,
