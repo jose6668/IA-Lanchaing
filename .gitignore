@@ -1,0 +1,6 @@
+venv/
+chroma_diagnostico/
+__pycache__/
+*.pyc
+.env
+.DS_Store
