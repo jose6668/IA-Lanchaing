@@ -3,18 +3,10 @@ streamlit
 
 # LangChain, LangGraph y conectores
 langchain
-langchain-community
 langchain-core
 langchain-openai
-langchain-text-splitters
 langgraph
-
-# Base vectorial local
-chromadb
 
 # Modelos y tokenizacion de OpenAI
 openai
 tiktoken
-
-# Lectura del PDF diagnostico usado por PyPDFLoader
-pypdf

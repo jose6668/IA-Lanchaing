@@ -13,29 +13,11 @@ logger = logging.getLogger(__name__)
 
 @st.cache_resource
 def initialize_system():
-    """
-    Inicializa el grafo del asistente educativo.
-    """
+    """Inicializa el grafo del asistente educativo."""
 
     assistant_graph = create_learning_assistant_graph()
 
-    stored_documents = (
-        assistant_graph
-        .diagnostic_rag
-        .count_documents()
-    )
-
-    logger.info(
-        "LangGraph inicializado con %s fragmentos RAG.",
-        stored_documents,
-    )
-
-    if stored_documents == 0:
-        raise RuntimeError(
-            "La coleccion de Chroma existe, pero no contiene "
-            "fragmentos. Ejecuta nuevamente "
-            "`python -m Services.setup_diagnostic_rag`."
-        )
+    logger.info("LangGraph inicializado correctamente.")
 
     return assistant_graph
 
@@ -45,9 +27,7 @@ def ask_assistant(
     tono: str,
     modo_aprendizaje: str,
 ) -> tuple[str, list[dict]]:
-    """
-    Procesa una pregunta utilizando LangGraph y el RAG diagnostico.
-    """
+    """Procesa una pregunta utilizando LangGraph."""
 
     clean_question = question.strip()
 
@@ -67,20 +47,10 @@ def ask_assistant(
             modo_aprendizaje=modo_aprendizaje,
         )
 
-        query_type = result.get("tipo_consulta", "programacion")
-        diagnostic_sources = result.get("fuentes", [])
+        query_type = result.get("tipo_consulta", "restriccion")
         response = result.get("respuesta")
 
-        logger.info(
-            "Tipo de consulta detectado: %s",
-            query_type,
-        )
-
-        logger.info(
-            "Fuentes recuperadas: %s",
-            diagnostic_sources,
-        )
-
+        logger.info("Tipo de consulta detectado: %s", query_type)
         logger.info(
             "Historial de LangGraph: %s",
             result.get("historial", []),
@@ -93,26 +63,10 @@ def ask_assistant(
                 [],
             )
 
-        return response, diagnostic_sources
-
-    except FileNotFoundError as error:
-        logger.exception(
-            "No se encontro la base vectorial."
-        )
-
-        return str(error), []
-
-    except RuntimeError as error:
-        logger.exception(
-            "La coleccion vectorial esta vacia."
-        )
-
-        return str(error), []
+        return response, []
 
     except Exception as error:
-        logger.exception(
-            "Error al procesar la consulta."
-        )
+        logger.exception("Error al procesar la consulta.")
 
         return (
             "No pude procesar tu pregunta en este momento. "
@@ -128,6 +82,6 @@ def get_assistant_info() -> dict:
         "tipo": "Tutor inteligente de programacion con LangGraph",
         "modelo": MODEL_NAME,
         "temperatura": TEMPERATURE,
-        "contexto": "Diagnostico educativo con RAG",
+        "contexto": "Programacion, revision de codigo y memoria conversacional",
         "orquestacion": "LangGraph",
     }

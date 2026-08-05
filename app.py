@@ -1,11 +1,10 @@
 import streamlit as st
 
-from UI.asistente import *
-from Models.config import *
-from Services.setup_diagnostic_rag import DiagnosticDocumentProcessor
+from UI.asistente import ask_assistant, get_assistant_info
+
 
 st.set_page_config(
-    page_title="Asistente de Programación",
+    page_title="Asistente de Programacion",
     page_icon="💻",
     layout="wide",
 )
@@ -133,50 +132,16 @@ if "messages" not in st.session_state:
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
-
-def diagnostic_is_configured() -> bool:
-    """Comprueba que exista el índice vectorial."""
-
-    return DIAGNOSTIC_CHROMA_PATH.exists()
-
-
-def configure_diagnostic() -> bool:
-    """Procesa el PDF y reconstruye ChromaDB."""
-
-    try:
-        processor = (
-            DiagnosticDocumentProcessor()
-        )
-
-        vectorstore = processor.setup()
-
-        return vectorstore is not None
-
-    except Exception as error:
-        st.error(
-            "No fue posible configurar "
-            f"el diagnóstico: {error}"
-        )
-
-        return False
-
-
-
-st.title(
-    "💻 Asistente para Aprender Programación"
-)
+st.title("💻 Asistente para Aprender Programacion")
 
 st.caption(
-    "Tutor educativo personalizado mediante "
-    "un diagnóstico de necesidades estudiantiles"
+    "Tutor educativo personalizado para programacion y revision de codigo"
 )
 
 st.divider()
 
-
-
 with st.sidebar:
-    st.header("📋 Información del sistema")
+    st.header("📋 Informacion del sistema")
 
     assistant_info = get_assistant_info()
 
@@ -184,50 +149,10 @@ with st.sidebar:
     st.info(assistant_info["tipo"])
     st.divider()
 
-
-    st.subheader("📄 Diagnóstico educativo")
-
-    if DIAGNOSTIC_PDF_PATH.exists():
-        st.success("PDF encontrado")
-    else:
-        st.error(
-            "No se encontró el PDF dentro "
-            "de la carpeta docs."
-        )
-
-    if diagnostic_is_configured():
-        st.success("Base vectorial configurada")
-    else:
-        st.warning(
-            "La base vectorial todavía "
-            "no está configurada."
-        )
-
-    if st.button(
-        "🔄 Procesar o reconstruir diagnóstico",
-        use_container_width=True,
-        key="configure_diagnostic_button",
-    ):
-        with st.spinner(
-            "Procesando el documento..."
-        ):
-            if configure_diagnostic():
-                st.success(
-                    "Diagnóstico procesado correctamente."
-                )
-
-                # Elimina los recursos que conservaban el RAG anterior.
-                st.cache_resource.clear()
-
-                st.rerun()
-
-    st.divider()
-
     st.markdown("**🎓 Modo de aprendizaje:**")
-
     st.info(
         "Aprendizaje guiado: el asistente orienta paso a paso "
-        "con preguntas y pistas, sin entregar la solución completa "
+        "con preguntas y pistas, sin entregar la solucion completa "
         "de inmediato."
     )
 
@@ -240,66 +165,42 @@ with st.sidebar:
         key="clear_chat_button",
     ):
         st.session_state.messages = []
+        st.cache_resource.clear()
         st.rerun()
 
-
-chat_column, topics_column = st.columns(
-    [2, 1]
-)
+chat_column, topics_column = st.columns([2, 1])
 
 with chat_column:
-    st.markdown(
-        "### 💬 Chat de aprendizaje"
-    )
+    st.markdown("### 💬 Chat de aprendizaje")
 
     if not st.session_state.messages:
         st.info(
-            "Escribe una pregunta de programación "
-            "o consulta los resultados del diagnóstico."
+            "Escribe una pregunta de programacion o comparte codigo "
+            "para revisarlo paso a paso."
         )
 
     for message in st.session_state.messages:
-        with st.chat_message(
-            message["role"]
-        ):
-            st.markdown(
-                message["content"]
-            )
-
-            diagnostic_sources = (
-                message.get(
-                    "diagnostic_sources",
-                    [],
-                )
-            )
-
-            
-
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 with topics_column:
-    st.markdown(
-        "### 📚 Temas sugeridos"
-    )
+    st.markdown("### 📚 Temas sugeridos")
 
     st.info(
         """
         Puedes preguntar:
 
-        - ¿Cuál es la principal dificultad del grupo?
-        - ¿Cuántos estudiantes sienten frustración?
-        - ¿Qué prefieren los estudiantes al aprender?
-        - ¿Qué es una variable?
-        - ¿Qué es un ciclo `for`?
-        - ¿Cómo funciona un `if`?
-        - Explícame las listas en Python.
-        - Ayúdame a corregir este código.
+        - ¿Que es una variable?
+        - ¿Que es un ciclo `for`?
+        - ¿Como funciona un `if`?
+        - Explicame las listas en Python.
+        - Ayudame a corregir este codigo.
+        - ¿Por que me sale este error?
         """
     )
 
-
-
 user_input = st.chat_input(
-    "Escribe tu pregunta sobre programación...",
+    "Escribe tu pregunta sobre programacion...",
     key="main_chat_input",
 )
 
@@ -311,37 +212,28 @@ if user_input:
         }
     )
 
-    with st.spinner(
-        "💻 Analizando tu pregunta..."
-    ):
-        response, diagnostic_sources = (
-            ask_assistant(
-                question=user_input,
-                tono=DEFAULT_ASSISTANT_TONE,
-                modo_aprendizaje=DEFAULT_LEARNING_MODE,
-            )
+    with st.spinner("💻 Analizando tu pregunta..."):
+        response, _sources = ask_assistant(
+            question=user_input,
+            tono=DEFAULT_ASSISTANT_TONE,
+            modo_aprendizaje=DEFAULT_LEARNING_MODE,
         )
 
     st.session_state.messages.append(
         {
             "role": "assistant",
             "content": response,
-            "diagnostic_sources": (
-                diagnostic_sources
-            ),
         }
     )
 
     st.rerun()
-
-
 
 st.divider()
 
 st.markdown(
     """
     <div class="palette-footer" style="text-align: center;">
-        💻 Asistente educativo con RAG diagnóstico
+        💻 Asistente educativo de programacion
     </div>
     """,
     unsafe_allow_html=True,
