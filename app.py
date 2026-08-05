@@ -1,10 +1,9 @@
 import streamlit as st
 
-from UI.asistente import ask_assistant, get_assistant_info
-
+from UI.asistente import ask_assistant
 
 st.set_page_config(
-    page_title="Asistente de Programacion",
+    page_title="Asistente de Programación",
     page_icon="💻",
     layout="wide",
 )
@@ -19,10 +18,12 @@ st.markdown(
             --color-azul-oscuro: #155F82;
             --color-superficie: #F7FBFA;
             --color-texto: #173642;
+            --color-borde: rgba(149, 209, 220, 0.75);
         }
 
         .stApp {
-            background: var(--color-superficie);
+            background:
+                linear-gradient(180deg, #E7F0EA 0%, #F7FBFA 34%, #FFFFFF 100%);
             color: var(--color-texto);
         }
 
@@ -49,6 +50,16 @@ st.markdown(
             color: var(--color-azul);
         }
 
+        p, li, label, span, div {
+            color: var(--color-texto);
+        }
+
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] li {
+            color: var(--color-texto) !important;
+            line-height: 1.7;
+        }
+
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
             border-right: 4px solid var(--color-celeste);
@@ -58,6 +69,20 @@ st.markdown(
         [data-testid="stSidebar"] h2,
         [data-testid="stSidebar"] h3,
         [data-testid="stSidebar"] .stMarkdown strong {
+            color: var(--color-azul);
+        }
+
+        .sidebar-guide {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--color-borde);
+            border-left: 5px solid var(--color-azul);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--color-texto);
+            line-height: 1.65;
+        }
+
+        .sidebar-guide strong {
             color: var(--color-azul);
         }
 
@@ -75,15 +100,29 @@ st.markdown(
         }
 
         [data-testid="stAlert"] {
+            background-color: rgba(149, 209, 220, 0.28);
             border-radius: 8px;
             border-left: 5px solid var(--color-celeste);
         }
 
+        [data-testid="stAlert"] *,
+        [data-testid="stAlert"] p,
+        [data-testid="stAlert"] li {
+            color: var(--color-texto) !important;
+        }
+
         [data-testid="stChatMessage"] {
-            background-color: rgba(231, 240, 234, 0.52);
+            background-color: rgba(255, 255, 255, 0.78);
             border-left: 5px solid var(--color-celeste);
             border-radius: 8px;
-            padding: 0.5rem;
+            padding: 0.65rem;
+            box-shadow: 0 8px 22px rgba(26, 119, 163, 0.07);
+        }
+
+        [data-testid="stChatMessage"] p,
+        [data-testid="stChatMessage"] li,
+        [data-testid="stChatMessage"] code {
+            color: var(--color-texto) !important;
         }
 
         [data-testid="stChatMessage"]:has(
@@ -99,13 +138,13 @@ st.markdown(
         }
 
         [data-testid="stChatInput"] > div {
-            background-color: var(--color-superficie) !important;
+            background-color: #FFFFFF !important;
             border: 2px solid var(--color-celeste) !important;
             box-shadow: none !important;
         }
 
         [data-testid="stChatInput"] textarea {
-            background-color: var(--color-superficie) !important;
+            background-color: #FFFFFF !important;
             color: var(--color-texto) !important;
         }
 
@@ -132,28 +171,32 @@ if "messages" not in st.session_state:
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
-st.title("💻 Asistente para Aprender Programacion")
+
+st.title(
+    "💻 Asistente para Aprender Programación"
+)
 
 st.caption(
-    "Tutor educativo personalizado para programacion y revision de codigo"
+    "Tutor educativo guiado para aprender programación paso a paso"
 )
 
 st.divider()
 
+
+
 with st.sidebar:
-    st.header("📋 Informacion del sistema")
+    st.header("Guía de uso")
 
-    assistant_info = get_assistant_info()
-
-    st.markdown("**🤖 Tipo de asistente:**")
-    st.info(assistant_info["tipo"])
-    st.divider()
-
-    st.markdown("**🎓 Modo de aprendizaje:**")
-    st.info(
-        "Aprendizaje guiado: el asistente orienta paso a paso "
-        "con preguntas y pistas, sin entregar la solucion completa "
-        "de inmediato."
+    st.markdown(
+        """
+        <div class="sidebar-guide">
+            <strong>Este asistente te ayuda a aprender programación.</strong>
+            Escribe una pregunta, comparte una duda o pega un fragmento de
+            código. Recibirás orientación paso a paso, con pistas y preguntas
+            para que puedas construir la solución por tu cuenta.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     st.divider()
@@ -165,42 +208,56 @@ with st.sidebar:
         key="clear_chat_button",
     ):
         st.session_state.messages = []
-        st.cache_resource.clear()
         st.rerun()
 
-chat_column, topics_column = st.columns([2, 1])
+
+chat_column, topics_column = st.columns(
+    [2, 1]
+)
 
 with chat_column:
-    st.markdown("### 💬 Chat de aprendizaje")
+    st.markdown(
+        "### 💬 Chat de aprendizaje"
+    )
 
     if not st.session_state.messages:
         st.info(
-            "Escribe una pregunta de programacion o comparte codigo "
-            "para revisarlo paso a paso."
+            "Escribe una pregunta de programación "
+            "o comparte un fragmento de código para recibir ayuda guiada."
         )
 
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        with st.chat_message(
+            message["role"]
+        ):
+            st.markdown(
+                message["content"]
+            )
+
 
 with topics_column:
-    st.markdown("### 📚 Temas sugeridos")
+    st.markdown(
+        "### 📚 Temas sugeridos"
+    )
 
     st.info(
         """
         Puedes preguntar:
 
-        - ¿Que es una variable?
-        - ¿Que es un ciclo `for`?
-        - ¿Como funciona un `if`?
-        - Explicame las listas en Python.
-        - Ayudame a corregir este codigo.
-        - ¿Por que me sale este error?
+        - ¿Qué es una variable?
+        - ¿Qué es un ciclo `for`?
+        - ¿Cómo funciona un `if`?
+        - Explícame las listas en Python.
+        - Ayúdame a corregir este código.
+        - ¿Cómo divido este problema en pasos?
+        - ¿Qué debo revisar antes de ejecutar mi programa?
         """
     )
 
+
+
 user_input = st.chat_input(
-    "Escribe tu pregunta sobre programacion...",
+    "Escribe tu pregunta sobre programación...",
     key="main_chat_input",
 )
 
@@ -212,11 +269,15 @@ if user_input:
         }
     )
 
-    with st.spinner("💻 Analizando tu pregunta..."):
-        response, _sources = ask_assistant(
-            question=user_input,
-            tono=DEFAULT_ASSISTANT_TONE,
-            modo_aprendizaje=DEFAULT_LEARNING_MODE,
+    with st.spinner(
+        "💻 Analizando tu pregunta..."
+    ):
+        response, _ = (
+            ask_assistant(
+                question=user_input,
+                tono=DEFAULT_ASSISTANT_TONE,
+                modo_aprendizaje=DEFAULT_LEARNING_MODE,
+            )
         )
 
     st.session_state.messages.append(
@@ -228,13 +289,16 @@ if user_input:
 
     st.rerun()
 
+
+
 st.divider()
 
 st.markdown(
     """
     <div class="palette-footer" style="text-align: center;">
-        💻 Asistente educativo de programacion
+        💻 Asistente educativo de programación
     </div>
     """,
     unsafe_allow_html=True,
 )
+
