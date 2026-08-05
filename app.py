@@ -1,8 +1,6 @@
 import streamlit as st
 
-from UI.asistente import *
-from Models.config import *
-from Services.setup_diagnostic_rag import DiagnosticDocumentProcessor
+from UI.asistente import ask_assistant
 
 st.set_page_config(
     page_title="Asistente de Programación",
@@ -20,10 +18,12 @@ st.markdown(
             --color-azul-oscuro: #155F82;
             --color-superficie: #F7FBFA;
             --color-texto: #173642;
+            --color-borde: rgba(149, 209, 220, 0.75);
         }
 
         .stApp {
-            background: var(--color-superficie);
+            background:
+                linear-gradient(180deg, #E7F0EA 0%, #F7FBFA 34%, #FFFFFF 100%);
             color: var(--color-texto);
         }
 
@@ -50,6 +50,16 @@ st.markdown(
             color: var(--color-azul);
         }
 
+        p, li, label, span, div {
+            color: var(--color-texto);
+        }
+
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] li {
+            color: var(--color-texto) !important;
+            line-height: 1.7;
+        }
+
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
             border-right: 4px solid var(--color-celeste);
@@ -59,6 +69,20 @@ st.markdown(
         [data-testid="stSidebar"] h2,
         [data-testid="stSidebar"] h3,
         [data-testid="stSidebar"] .stMarkdown strong {
+            color: var(--color-azul);
+        }
+
+        .sidebar-guide {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--color-borde);
+            border-left: 5px solid var(--color-azul);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--color-texto);
+            line-height: 1.65;
+        }
+
+        .sidebar-guide strong {
             color: var(--color-azul);
         }
 
@@ -76,15 +100,29 @@ st.markdown(
         }
 
         [data-testid="stAlert"] {
+            background-color: rgba(149, 209, 220, 0.28);
             border-radius: 8px;
             border-left: 5px solid var(--color-celeste);
         }
 
+        [data-testid="stAlert"] *,
+        [data-testid="stAlert"] p,
+        [data-testid="stAlert"] li {
+            color: var(--color-texto) !important;
+        }
+
         [data-testid="stChatMessage"] {
-            background-color: rgba(231, 240, 234, 0.52);
+            background-color: rgba(255, 255, 255, 0.78);
             border-left: 5px solid var(--color-celeste);
             border-radius: 8px;
-            padding: 0.5rem;
+            padding: 0.65rem;
+            box-shadow: 0 8px 22px rgba(26, 119, 163, 0.07);
+        }
+
+        [data-testid="stChatMessage"] p,
+        [data-testid="stChatMessage"] li,
+        [data-testid="stChatMessage"] code {
+            color: var(--color-texto) !important;
         }
 
         [data-testid="stChatMessage"]:has(
@@ -100,13 +138,13 @@ st.markdown(
         }
 
         [data-testid="stChatInput"] > div {
-            background-color: var(--color-superficie) !important;
+            background-color: #FFFFFF !important;
             border: 2px solid var(--color-celeste) !important;
             box-shadow: none !important;
         }
 
         [data-testid="stChatInput"] textarea {
-            background-color: var(--color-superficie) !important;
+            background-color: #FFFFFF !important;
             color: var(--color-texto) !important;
         }
 
@@ -134,41 +172,12 @@ DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
 
-def diagnostic_is_configured() -> bool:
-    """Comprueba que exista el índice vectorial."""
-
-    return DIAGNOSTIC_CHROMA_PATH.exists()
-
-
-def configure_diagnostic() -> bool:
-    """Procesa el PDF y reconstruye ChromaDB."""
-
-    try:
-        processor = (
-            DiagnosticDocumentProcessor()
-        )
-
-        vectorstore = processor.setup()
-
-        return vectorstore is not None
-
-    except Exception as error:
-        st.error(
-            "No fue posible configurar "
-            f"el diagnóstico: {error}"
-        )
-
-        return False
-
-
-
 st.title(
     "💻 Asistente para Aprender Programación"
 )
 
 st.caption(
-    "Tutor educativo personalizado mediante "
-    "un diagnóstico de necesidades estudiantiles"
+    "Tutor educativo guiado para aprender programación paso a paso"
 )
 
 st.divider()
@@ -176,59 +185,18 @@ st.divider()
 
 
 with st.sidebar:
-    st.header("📋 Información del sistema")
+    st.header("Guía de uso")
 
-    assistant_info = get_assistant_info()
-
-    st.markdown("**🤖 Tipo de asistente:**")
-    st.info(assistant_info["tipo"])
-    st.divider()
-
-
-    st.subheader("📄 Diagnóstico educativo")
-
-    if DIAGNOSTIC_PDF_PATH.exists():
-        st.success("PDF encontrado")
-    else:
-        st.error(
-            "No se encontró el PDF dentro "
-            "de la carpeta docs."
-        )
-
-    if diagnostic_is_configured():
-        st.success("Base vectorial configurada")
-    else:
-        st.warning(
-            "La base vectorial todavía "
-            "no está configurada."
-        )
-
-    if st.button(
-        "🔄 Procesar o reconstruir diagnóstico",
-        use_container_width=True,
-        key="configure_diagnostic_button",
-    ):
-        with st.spinner(
-            "Procesando el documento..."
-        ):
-            if configure_diagnostic():
-                st.success(
-                    "Diagnóstico procesado correctamente."
-                )
-
-                # Elimina los recursos que conservaban el RAG anterior.
-                st.cache_resource.clear()
-
-                st.rerun()
-
-    st.divider()
-
-    st.markdown("**🎓 Modo de aprendizaje:**")
-
-    st.info(
-        "Aprendizaje guiado: el asistente orienta paso a paso "
-        "con preguntas y pistas, sin entregar la solución completa "
-        "de inmediato."
+    st.markdown(
+        """
+        <div class="sidebar-guide">
+            <strong>Este asistente te ayuda a aprender programación.</strong>
+            Escribe una pregunta, comparte una duda o pega un fragmento de
+            código. Recibirás orientación paso a paso, con pistas y preguntas
+            para que puedas construir la solución por tu cuenta.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     st.divider()
@@ -255,7 +223,7 @@ with chat_column:
     if not st.session_state.messages:
         st.info(
             "Escribe una pregunta de programación "
-            "o consulta los resultados del diagnóstico."
+            "o comparte un fragmento de código para recibir ayuda guiada."
         )
 
     for message in st.session_state.messages:
@@ -265,15 +233,6 @@ with chat_column:
             st.markdown(
                 message["content"]
             )
-
-            diagnostic_sources = (
-                message.get(
-                    "diagnostic_sources",
-                    [],
-                )
-            )
-
-            
 
 
 with topics_column:
@@ -285,14 +244,13 @@ with topics_column:
         """
         Puedes preguntar:
 
-        - ¿Cuál es la principal dificultad del grupo?
-        - ¿Cuántos estudiantes sienten frustración?
-        - ¿Qué prefieren los estudiantes al aprender?
         - ¿Qué es una variable?
         - ¿Qué es un ciclo `for`?
         - ¿Cómo funciona un `if`?
         - Explícame las listas en Python.
         - Ayúdame a corregir este código.
+        - ¿Cómo divido este problema en pasos?
+        - ¿Qué debo revisar antes de ejecutar mi programa?
         """
     )
 
@@ -314,7 +272,7 @@ if user_input:
     with st.spinner(
         "💻 Analizando tu pregunta..."
     ):
-        response, diagnostic_sources = (
+        response, _ = (
             ask_assistant(
                 question=user_input,
                 tono=DEFAULT_ASSISTANT_TONE,
@@ -326,9 +284,6 @@ if user_input:
         {
             "role": "assistant",
             "content": response,
-            "diagnostic_sources": (
-                diagnostic_sources
-            ),
         }
     )
 
@@ -341,8 +296,9 @@ st.divider()
 st.markdown(
     """
     <div class="palette-footer" style="text-align: center;">
-        💻 Asistente educativo con RAG diagnóstico
+        💻 Asistente educativo de programación
     </div>
     """,
     unsafe_allow_html=True,
 )
+
