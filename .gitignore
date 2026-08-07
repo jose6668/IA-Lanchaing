@@ -1,5 +1,4 @@
 venv/
-chroma_diagnostico/
 __pycache__/
 *.pyc
 .env
