@@ -26,6 +26,7 @@ def ask_assistant(
     question: str,
     tono: str,
     modo_aprendizaje: str,
+    session_id: str,
 ) -> tuple[str, list[dict]]:
     """Procesa una pregunta utilizando LangGraph."""
 
@@ -45,6 +46,7 @@ def ask_assistant(
             question=clean_question,
             tono=tono,
             modo_aprendizaje=modo_aprendizaje,
+            session_id=session_id,
         )
 
         query_type = result.get("tipo_consulta", "restriccion")

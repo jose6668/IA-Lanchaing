@@ -1,4 +1,5 @@
 import streamlit as st
+from uuid import uuid4
 
 from UI.asistente import ask_assistant
 
@@ -168,6 +169,9 @@ st.markdown(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "session_id" not in st.session_state:
+    st.session_state.session_id = f"streamlit-{uuid4().hex}"
+
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
@@ -208,6 +212,7 @@ with st.sidebar:
         key="clear_chat_button",
     ):
         st.session_state.messages = []
+        st.session_state.session_id = f"streamlit-{uuid4().hex}"
         st.rerun()
 
 
@@ -277,6 +282,7 @@ if user_input:
                 question=user_input,
                 tono=DEFAULT_ASSISTANT_TONE,
                 modo_aprendizaje=DEFAULT_LEARNING_MODE,
+                session_id=st.session_state.session_id,
             )
         )
 
