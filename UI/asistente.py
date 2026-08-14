@@ -3,7 +3,14 @@ import logging
 import streamlit as st
 
 from Graphs.learning_graph import create_learning_assistant_graph
-from Models.config import MODEL_NAME, TEMPERATURE
+from Models.config import (
+    MAX_HISTORY_MESSAGES,
+    MEMORY_DB_PATH,
+    MODEL_NAME,
+    TEMPERATURE,
+)
+from Services.conversation_memory import get_recent_messages_for_ui
+from Services.conversation_memory import SQLiteLimitedChatMessageHistory
 
 
 logging.basicConfig(level=logging.INFO)
@@ -87,3 +94,24 @@ def get_assistant_info() -> dict:
         "contexto": "Programacion, revision de codigo y memoria conversacional",
         "orquestacion": "LangGraph",
     }
+
+
+def get_recent_conversation(session_id: str) -> list[dict[str, str]]:
+    """Recupera mensajes recientes persistidos para reconstruir la UI."""
+
+    return get_recent_messages_for_ui(
+        session_id=session_id,
+        db_path=MEMORY_DB_PATH,
+        max_messages=MAX_HISTORY_MESSAGES,
+    )
+
+
+def clear_conversation(session_id: str) -> None:
+    """Elimina la memoria persistente asociada a una sesion."""
+
+    history = SQLiteLimitedChatMessageHistory(
+        session_id=session_id,
+        db_path=MEMORY_DB_PATH,
+        max_messages=MAX_HISTORY_MESSAGES,
+    )
+    history.clear()

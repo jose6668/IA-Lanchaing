@@ -2,7 +2,7 @@
 
 ## 1. Descripcion general
 
-El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, orquestacion mediante LangGraph, clasificacion de consultas con un LLM y memoria conversacional temporal por sesion.
+El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, orquestacion mediante LangGraph, clasificacion de consultas con un LLM y memoria conversacional persistente por sesion.
 
 El objetivo pedagogico principal es el aprendizaje guiado. El asistente orienta al estudiante paso a paso, explica el razonamiento, ofrece pistas progresivas y evita entregar respuestas finales o codigo completo de inmediato.
 
@@ -16,6 +16,7 @@ Tecnologias principales:
 | LangChain / LCEL | Composicion de prompts, modelo y parser. |
 | langchain-openai | Integracion con `ChatOpenAI`. |
 | RunnableWithMessageHistory | Memoria conversacional por `session_id`. |
+| SQLite | Persistencia local del historial reciente. |
 
 ## 2. Estructura actual
 
@@ -77,10 +78,11 @@ Elementos relevantes:
 | CSS con `st.markdown()` | Aplica el estilo visual de la aplicacion. |
 | `st.session_state.messages` | Guarda el historial visible del chat. |
 | `st.session_state.session_id` | Identifica la memoria conversacional de la sesion. |
+| `st.query_params["session_id"]` | Conserva el identificador en la URL para recuperar la sesion. |
 | `DEFAULT_ASSISTANT_TONE` | Tono fijo enviado al grafo. |
 | `DEFAULT_LEARNING_MODE` | Modo pedagogico fijo enviado al grafo. |
 
-Cuando el usuario limpia el chat, tambien se genera un nuevo `session_id`. Esto evita que la memoria interna conserve informacion de una conversacion que visualmente ya fue borrada.
+Cuando el usuario limpia el chat, tambien se genera un nuevo `session_id`. Esto evita mezclar la nueva conversacion con el historial persistente anterior.
 
 ## 5. `UI/asistente.py`
 
@@ -91,6 +93,7 @@ Responsabilidad: adaptar la interfaz Streamlit al grafo de LangGraph.
 | `initialize_system()` | `LearningAssistantGraph` | Crea y cachea el grafo del asistente. |
 | `ask_assistant(question, tono, modo_aprendizaje, session_id)` | `(response, [])` | Limpia la pregunta, invoca el grafo y devuelve la respuesta. |
 | `get_assistant_info()` | `dict` | Devuelve metadatos publicos del asistente. |
+| `get_recent_conversation(session_id)` | `list[dict]` | Recupera mensajes persistidos para reconstruir el chat visible. |
 
 Manejo de errores:
 
@@ -148,10 +151,10 @@ Si la respuesta del clasificador no coincide con una categoria valida, `_normali
 
 ### Memoria
 
-La memoria se guarda en:
+La memoria se guarda mediante `Services/conversation_memory.py` y se consume desde el grafo con:
 
 ```python
-self.memory_store: dict[str, InMemoryChatMessageHistory] = {}
+self.memory_store: dict[str, SQLiteLimitedChatMessageHistory] = {}
 ```
 
 Cada `session_id` tiene su propio historial. La cadena principal usa:
@@ -165,7 +168,27 @@ RunnableWithMessageHistory(
 )
 ```
 
-## 7. `Prompts/prompt.py`
+El limite activo es de 20 mensajes por sesion. Este valor se define en `Models/config.py`.
+
+## 7. `Services/conversation_memory.py`
+
+Responsabilidad: manejar la memoria persistente local del asistente.
+
+| Elemento | Descripcion |
+| --- | --- |
+| `SQLiteLimitedChatMessageHistory` | Implementa historial compatible con LangChain usando SQLite. |
+| `messages` | Recupera mensajes ordenados por sesion. |
+| `add_messages()` | Guarda nuevos mensajes y recorta el historial. |
+| `clear()` | Elimina mensajes de una sesion. |
+| `get_recent_messages_for_ui()` | Convierte mensajes persistidos al formato usado por Streamlit. |
+
+Regla principal:
+
+```text
+Cada session_id conserva maximo 20 mensajes.
+```
+
+## 8. `Prompts/prompt.py`
 
 Responsabilidad: definir `PROGRAMMING_TEMPLATE`.
 
@@ -183,7 +206,7 @@ El prompt contiene:
 
 El historial no se inserta como texto dentro del template. Se inyecta como mensajes reales usando `MessagesPlaceholder` desde `Graphs/learning_graph.py`.
 
-## 8. `Models/config.py`
+## 9. `Models/config.py`
 
 Responsabilidad: centralizar configuracion basica.
 
@@ -192,8 +215,10 @@ Responsabilidad: centralizar configuracion basica.
 | `BASE_DIR` | Raiz del proyecto. |
 | `MODEL_NAME` | `gpt-4o-mini` |
 | `TEMPERATURE` | `0.3` |
+| `MEMORY_DB_PATH` | Ruta local de SQLite para memoria conversacional. |
+| `MAX_HISTORY_MESSAGES` | `20` |
 
-## 9. `Requirements/requirements.txt`
+## 10. `Requirements/requirements.txt`
 
 Dependencias principales:
 
@@ -207,7 +232,7 @@ Dependencias principales:
 | `openai` | Cliente OpenAI. |
 | `tiktoken` | Tokenizacion. |
 
-## 10. Comandos utiles
+## 11. Comandos utiles
 
 Ejecutar la aplicacion:
 
@@ -227,13 +252,14 @@ Buscar referencias eliminadas:
 rg "diagnost|RAG|Chroma|PDF|embedding|pypdf" app.py Graphs UI Models Prompts Requirements
 ```
 
-## 11. Estado actual del codigo
+## 12. Estado actual del codigo
 
 Implementado:
 
 - Grafo con cuatro rutas principales.
 - Clasificacion con LLM.
-- Memoria temporal por sesion.
+- Memoria persistente por sesion.
+- Limite de 20 mensajes por sesion.
 - Restriccion fuera de dominio.
 - Eliminacion de dependencias de RAG.
 

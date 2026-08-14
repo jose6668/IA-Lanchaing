@@ -192,6 +192,8 @@ Implementado:
 - Clasificacion LLM con cuatro categorias.
 - Eliminacion del flujo de diagnostico, PDF, embeddings y ChromaDB.
 - Memoria temporal por sesion.
+- Memoria persistente local por `session_id`.
+- Limite de 20 mensajes guardados por sesion.
 - Restriccion amable de consultas fuera de programacion.
 - Documentacion tecnica actualizada.
 

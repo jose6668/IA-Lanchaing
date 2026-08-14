@@ -1,7 +1,7 @@
 import streamlit as st
 from uuid import uuid4
 
-from UI.asistente import ask_assistant
+from UI.asistente import ask_assistant, clear_conversation, get_recent_conversation
 
 st.set_page_config(
     page_title="Asistente de Programación",
@@ -166,11 +166,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 if "session_id" not in st.session_state:
-    st.session_state.session_id = f"streamlit-{uuid4().hex}"
+    query_session_id = st.query_params.get("session_id")
+    if query_session_id:
+        st.session_state.session_id = query_session_id
+    else:
+        st.session_state.session_id = f"streamlit-{uuid4().hex}"
+        st.query_params["session_id"] = st.session_state.session_id
+
+if "messages" not in st.session_state:
+    st.session_state.messages = get_recent_conversation(
+        st.session_state.session_id
+    )
 
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
@@ -211,8 +218,10 @@ with st.sidebar:
         use_container_width=True,
         key="clear_chat_button",
     ):
+        clear_conversation(st.session_state.session_id)
         st.session_state.messages = []
         st.session_state.session_id = f"streamlit-{uuid4().hex}"
+        st.query_params["session_id"] = st.session_state.session_id
         st.rerun()
 
 

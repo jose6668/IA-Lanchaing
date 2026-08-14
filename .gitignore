@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+conversation_memory.sqlite
+conversation_memory.sqlite-*
