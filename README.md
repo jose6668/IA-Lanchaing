@@ -1,8 +1,8 @@
 # IA-Lanchaing
 
-Asistente educativo de programacion construido con Python, Streamlit, LangChain, OpenAI y ChromaDB. El proyecto permite que un estudiante interactue con un tutor inteligente capaz de responder preguntas de programacion y adaptar sus explicaciones segun el tono y modo de aprendizaje seleccionados.
+Asistente educativo de programacion construido con Python, Streamlit, LangChain, LangGraph, OpenAI y ChromaDB. El proyecto permite que un estudiante interactue con un tutor inteligente capaz de responder preguntas de programacion, adaptar sus explicaciones segun el tono y modo de aprendizaje seleccionados, y consultar informacion de un diagnostico educativo mediante RAG.
 
-Ademas, el sistema incorpora un flujo RAG sobre un documento diagnostico en PDF. Esto permite que, cuando el usuario haga preguntas relacionadas con la encuesta, el reporte o las dificultades del grupo, el asistente recupere informacion relevante desde una base vectorial local y genere respuestas contextualizadas.
+La version actual incorpora una capa de orquestacion con LangGraph. Esto permite separar el flujo en nodos especializados para clasificar la consulta, recuperar contexto diagnostico cuando aplica, generar respuestas de programacion, atender revisiones de codigo y preparar una respuesta final para la interfaz.
 
 ## Tabla de contenido
 
@@ -10,6 +10,7 @@ Ademas, el sistema incorpora un flujo RAG sobre un documento diagnostico en PDF.
 - [Objetivo](#objetivo)
 - [Funcionalidades principales](#funcionalidades-principales)
 - [Arquitectura general](#arquitectura-general)
+- [Flujo con LangGraph](#flujo-con-langgraph)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Documentacion del proyecto](#documentacion-del-proyecto)
 - [Tecnologias utilizadas](#tecnologias-utilizadas)
@@ -21,10 +22,11 @@ Ademas, el sistema incorpora un flujo RAG sobre un documento diagnostico en PDF.
 
 `IA-Lanchaing` es una aplicacion academica orientada al aprendizaje de programacion. Su interfaz principal esta desarrollada en Streamlit y ofrece una experiencia de chat donde el usuario puede realizar preguntas, solicitar explicaciones, pedir revision de codigo o consultar informacion relacionada con un diagnostico educativo.
 
-El asistente combina dos capacidades:
+El asistente combina tres capacidades:
 
 - **Asistencia general de programacion:** responde preguntas sobre conceptos, errores, estructuras de control, listas, variables, ciclos y ejercicios.
 - **Consulta contextual con RAG:** recupera informacion desde un PDF diagnostico previamente procesado e indexado en ChromaDB.
+- **Orquestacion con LangGraph:** dirige cada consulta por un flujo de nodos segun el tipo de pregunta.
 
 ## Objetivo
 
@@ -36,6 +38,7 @@ El sistema busca:
 - Adaptar el estilo de respuesta al tono elegido.
 - Ajustar la explicacion al modo de aprendizaje seleccionado.
 - Usar un diagnostico educativo como fuente de contexto cuando la pregunta lo requiera.
+- Separar responsabilidades internas mediante un grafo de LangGraph.
 - Mantener una base modular para evolucionar hacia una arquitectura mas robusta.
 
 ## Funcionalidades principales
@@ -48,6 +51,8 @@ El sistema busca:
 - Recuperacion de contexto mediante embeddings de OpenAI.
 - Generacion de respuestas con `ChatOpenAI`.
 - Prompt pedagogico configurable.
+- Orquestacion del flujo mediante LangGraph.
+- Clasificacion de consultas: diagnostico, programacion y revision de codigo.
 - Historial de conversacion en `st.session_state`.
 - Boton para reconstruir el diagnostico desde la interfaz.
 
@@ -55,7 +60,8 @@ El sistema busca:
 
 El proyecto sigue un estilo de monolito modular. La aplicacion se ejecuta desde `app.py`, pero distribuye responsabilidades en carpetas especializadas:
 
-- `UI/`: logica del asistente conversacional.
+- `UI/`: capa de entrada del asistente para Streamlit.
+- `Graphs/`: flujos de LangGraph y estado del asistente.
 - `Services/`: servicios de procesamiento documental y recuperacion RAG.
 - `Models/`: configuracion central del proyecto.
 - `Prompts/`: plantilla principal enviada al modelo.
@@ -69,12 +75,43 @@ Flujo principal:
 ```mermaid
 flowchart TD
     U[Usuario] --> APP[app.py Streamlit]
-    APP --> A[UI/asistente.py]
-    A --> RAG[Services/diagnostic_rag.py]
-    RAG --> CH[ChromaDB]
-    A --> LLM[ChatOpenAI]
-    LLM --> APP
+    APP --> UI[UI/asistente.py]
+    UI --> G[Graphs/learning_graph.py]
+    G --> C{Tipo de consulta}
+    C -->|diagnostico| RAG[Services/diagnostic_rag.py]
+    C -->|programacion| LLM[ChatOpenAI]
+    C -->|revision_codigo| LLM
+    RAG --> LLM
+    LLM --> UI
+    UI --> APP
     APP --> U
+```
+
+## Flujo con LangGraph
+
+El grafo principal se encuentra en `Graphs/learning_graph.py` y define los siguientes nodos:
+
+| Nodo | Responsabilidad |
+| --- | --- |
+| `clasificar_consulta` | Identifica si la pregunta es de diagnostico, programacion o revision de codigo. |
+| `recuperar_diagnostico` | Consulta ChromaDB y obtiene contexto del PDF cuando aplica. |
+| `generar_respuesta_programacion` | Genera respuestas generales de programacion sin usar contexto diagnostico. |
+| `generar_respuesta_diagnostico` | Genera respuestas usando el contexto recuperado del diagnostico. |
+| `analizar_codigo` | Procesa consultas de revision de codigo usando el modo pedagogico correspondiente. |
+| `respuesta_final` | Prepara la respuesta final que se devuelve a Streamlit. |
+
+```mermaid
+flowchart TD
+    START([START]) --> CLASIFICAR[clasificar_consulta]
+    CLASIFICAR --> DECISION{tipo_consulta}
+    DECISION -->|diagnostico| RAG[recuperar_diagnostico]
+    DECISION -->|programacion| PROG[generar_respuesta_programacion]
+    DECISION -->|revision_codigo| CODIGO[analizar_codigo]
+    RAG --> DIAG[generar_respuesta_diagnostico]
+    PROG --> FINAL[respuesta_final]
+    CODIGO --> FINAL
+    DIAG --> FINAL
+    FINAL --> END([END])
 ```
 
 ## Estructura del proyecto
@@ -89,8 +126,12 @@ IA-Lanchaing/
 |-- Documentacion/
 |   |-- ARQUITECTURA_PROYECTO.md
 |   `-- DOCUMENTACION_CODIGO.md
+|-- Graphs/
+|   |-- __init__.py
+|   `-- learning_graph.py
 |-- HU-docs/
-|   `-- HU_Asistente_Educativo_RAG.md
+|   |-- HU_Asistente_Educativo_RAG.md
+|   `-- HU_Integracion_LangGraph_Asistente_Educativo.md
 |-- Models/
 |   `-- config.py
 |-- Prompts/
@@ -105,13 +146,12 @@ IA-Lanchaing/
 
 ## Documentacion del proyecto
 
-La documentacion tecnica del proyecto se encuentra organizada en los siguientes archivos:
-
 | Documento | Descripcion |
 | --- | --- |
 | [Documentacion del codigo](./Documentacion/DOCUMENTACION_CODIGO.md) | Explica los modulos, funciones, clases, flujo de datos, comandos utiles y hallazgos tecnicos. |
 | [Arquitectura del proyecto](./Documentacion/ARQUITECTURA_PROYECTO.md) | Describe el estilo arquitectonico, componentes, diagramas, integraciones, riesgos y recomendaciones. |
-| [Historia de usuario implementada](./HU-docs/HU_Asistente_Educativo_RAG.md) | Resume que se realizo en la HU, criterios cubiertos, flujo implementado y pendientes tecnicos. |
+| [HU-01 - Asistente educativo con RAG](./HU-docs/HU_Asistente_Educativo_RAG.md) | Resume la primera fase del asistente educativo y su RAG diagnostico. |
+| [HU-02 - Integracion de LangGraph](./HU-docs/HU_Integracion_LangGraph_Asistente_Educativo.md) | Describe la incorporacion del grafo de LangGraph para orquestar el flujo. |
 
 ## Tecnologias utilizadas
 
@@ -120,6 +160,7 @@ La documentacion tecnica del proyecto se encuentra organizada en los siguientes 
 | Python | Lenguaje principal. |
 | Streamlit | Interfaz web y chat. |
 | LangChain | Construccion de cadenas, prompts y procesamiento documental. |
+| LangGraph | Orquestacion del flujo por nodos y estado compartido. |
 | LCEL | Composicion del pipeline `PromptTemplate | ChatOpenAI | StrOutputParser`. |
 | OpenAI | Modelo conversacional y embeddings. |
 | ChromaDB | Base vectorial local. |
@@ -155,7 +196,15 @@ python -m Services.diagnostic_rag
 
 ## Estado actual
 
-El proyecto se encuentra en estado de prototipo funcional. Ya cuenta con una interfaz de usuario, integracion con un LLM, procesamiento de PDF, base vectorial local y recuperacion de contexto mediante RAG.
+El proyecto se encuentra en estado de prototipo funcional avanzado. Ya cuenta con interfaz de usuario, integracion con un LLM, procesamiento de PDF, base vectorial local, recuperacion de contexto mediante RAG y un flujo inicial de LangGraph para orquestar consultas.
 
-La base actual es adecuada para un entorno academico o de practica, y puede evolucionar hacia una version mas robusta incorporando pruebas, validaciones, observabilidad y mejores controles de configuracion.
+## Mejoras recomendadas
 
+- Limpiar textos con problemas de codificacion.
+- Reemplazar imports wildcard en `app.py` por imports explicitos.
+- Crear un archivo de dependencias como `requirements.txt` o `pyproject.toml`.
+- Agregar pruebas automatizadas con `pytest`.
+- Validar que ChromaDB no solo exista, sino que contenga documentos.
+- Agregar manejo especifico de errores de OpenAI.
+- Incorporar medicion de latencia, tokens y costos.
+- Evaluar memoria conversacional persistente en una HU futura.

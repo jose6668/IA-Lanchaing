@@ -1,13 +1,9 @@
 import logging
 
 import streamlit as st
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 
+from Graphs.learning_graph import create_learning_assistant_graph
 from Models.config import MODEL_NAME, TEMPERATURE
-from Services.diagnostic_rag import DiagnosticRAG
-from Prompts.prompt import PROGRAMMING_TEMPLATE
 
 
 logging.basicConfig(level=logging.INFO)
@@ -18,42 +14,30 @@ logger = logging.getLogger(__name__)
 @st.cache_resource
 def initialize_system():
     """
-    Inicializa el modelo, el prompt y el sistema RAG.
+    Inicializa el grafo del asistente educativo.
     """
 
-    llm = ChatOpenAI(
-        model=MODEL_NAME,
-        temperature=TEMPERATURE,
-        max_retries=2,
+    assistant_graph = create_learning_assistant_graph()
+
+    stored_documents = (
+        assistant_graph
+        .diagnostic_rag
+        .count_documents()
     )
-
-    prompt_template = PromptTemplate.from_template(
-        PROGRAMMING_TEMPLATE
-    )
-
-    chain = (
-        prompt_template
-        | llm
-        | StrOutputParser()
-    )
-
-    diagnostic_rag = DiagnosticRAG()
-
-    stored_documents = diagnostic_rag.count_documents()
 
     logger.info(
-        "Sistema RAG inicializado con %s fragmentos.",
+        "LangGraph inicializado con %s fragmentos RAG.",
         stored_documents,
     )
 
     if stored_documents == 0:
         raise RuntimeError(
-            "La colección de Chroma existe, pero no contiene "
+            "La coleccion de Chroma existe, pero no contiene "
             "fragmentos. Ejecuta nuevamente "
-            "`python setup_diagnostic_rag.py`."
+            "`python -m Services.setup_diagnostic_rag`."
         )
 
-    return chain, diagnostic_rag
+    return assistant_graph
 
 
 def ask_assistant(
@@ -62,7 +46,7 @@ def ask_assistant(
     modo_aprendizaje: str,
 ) -> tuple[str, list[dict]]:
     """
-    Procesa una pregunta utilizando el diagnóstico educativo.
+    Procesa una pregunta utilizando LangGraph y el RAG diagnostico.
     """
 
     clean_question = question.strip()
@@ -75,15 +59,17 @@ def ask_assistant(
         )
 
     try:
-        chain, diagnostic_rag = initialize_system()
+        assistant_graph = initialize_system()
 
-        (
-            diagnostic_context,
-            query_type,
-            diagnostic_sources,
-        ) = diagnostic_rag.get_context(
-            clean_question
+        result = assistant_graph.invoke(
+            question=clean_question,
+            tono=tono,
+            modo_aprendizaje=modo_aprendizaje,
         )
+
+        query_type = result.get("tipo_consulta", "programacion")
+        diagnostic_sources = result.get("fuentes", [])
+        response = result.get("respuesta")
 
         logger.info(
             "Tipo de consulta detectado: %s",
@@ -96,44 +82,29 @@ def ask_assistant(
         )
 
         logger.info(
-            "Longitud del contexto recuperado: %s caracteres",
-            len(diagnostic_context),
+            "Historial de LangGraph: %s",
+            result.get("historial", []),
         )
 
-        if (
-            query_type == "diagnostico"
-            and not diagnostic_sources
-        ):
+        if not response:
             return (
-                "La pregunta fue identificada como una consulta "
-                "sobre el diagnóstico, pero no se recuperaron "
-                "fragmentos del documento. Revisa la terminal "
-                "y ejecuta `python diagnostic_rag.py`.",
+                "No se genero una respuesta final. Revisa el flujo "
+                "de LangGraph y vuelve a intentarlo.",
                 [],
             )
-
-        response = chain.invoke(
-            {
-                "question": clean_question,
-                "tono": tono,
-                "modo_aprendizaje": modo_aprendizaje,
-                "tipo_consulta": query_type,
-                "contexto_diagnostico": diagnostic_context,
-            }
-        )
 
         return response, diagnostic_sources
 
     except FileNotFoundError as error:
         logger.exception(
-            "No se encontró la base vectorial."
+            "No se encontro la base vectorial."
         )
 
         return str(error), []
 
     except RuntimeError as error:
         logger.exception(
-            "La colección vectorial está vacía."
+            "La coleccion vectorial esta vacia."
         )
 
         return str(error), []
@@ -145,17 +116,18 @@ def ask_assistant(
 
         return (
             "No pude procesar tu pregunta en este momento. "
-            f"Detalle técnico: {error}",
+            f"Detalle tecnico: {error}",
             [],
         )
 
 
 def get_assistant_info() -> dict:
-    """Devuelve información pública del asistente."""
+    """Devuelve informacion publica del asistente."""
 
     return {
-        "tipo": "Tutor inteligente de programación",
+        "tipo": "Tutor inteligente de programacion con LangGraph",
         "modelo": MODEL_NAME,
         "temperatura": TEMPERATURE,
-        "contexto": "Diagnóstico educativo con RAG",
+        "contexto": "Diagnostico educativo con RAG",
+        "orquestacion": "LangGraph",
     }

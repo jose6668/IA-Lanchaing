@@ -1,4 +1,4 @@
-# HU - Asistente educativo de programacion con RAG diagnostico
+# HU-002 - Asistente educativo de programacion con RAG diagnostico
 
 ## 1. Resumen de la historia de usuario
 

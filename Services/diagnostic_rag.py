@@ -166,16 +166,15 @@ class DiagnosticRAG:
                 )
             )
 
-            documents.sort(
-                key=lambda document: (
-                    document.metadata.get("page_number", 0),
-                    document.metadata.get("chunk_id", 0),
-                )
+        documents.sort(
+            key=lambda document: (
+                document.metadata.get("page_number", 0),
+                document.metadata.get("chunk_id", 0),
             )
+        )
 
-            return documents
+        return documents
 
-       
 
     def build_search_query(
         self,
