@@ -82,7 +82,7 @@ Elementos relevantes:
 | `DEFAULT_ASSISTANT_TONE` | Tono fijo enviado al grafo. |
 | `DEFAULT_LEARNING_MODE` | Modo pedagogico fijo enviado al grafo. |
 
-Cuando el usuario limpia el chat, tambien se genera un nuevo `session_id`. Esto evita mezclar la nueva conversacion con el historial persistente anterior.
+Si la aplicacion inicia sin `session_id` en la URL, intenta recuperar el ultimo `session_id` persistido antes de crear uno nuevo. Cuando el usuario limpia el chat, se elimina la memoria persistente de la sesion actual y luego se genera un nuevo `session_id`. Esto evita mezclar la nueva conversacion con el historial persistente anterior.
 
 ## 5. `UI/asistente.py`
 
@@ -181,6 +181,7 @@ Responsabilidad: manejar la memoria persistente local del asistente.
 | `add_messages()` | Guarda nuevos mensajes y recorta el historial. |
 | `clear()` | Elimina mensajes de una sesion. |
 | `get_recent_messages_for_ui()` | Convierte mensajes persistidos al formato usado por Streamlit. |
+| `get_latest_session_id()` | Recupera el ultimo `session_id` persistido. |
 
 Regla principal:
 

@@ -1,7 +1,12 @@
 import streamlit as st
 from uuid import uuid4
 
-from UI.asistente import ask_assistant, clear_conversation, get_recent_conversation
+from UI.asistente import (
+    ask_assistant,
+    clear_conversation,
+    get_last_conversation_session_id,
+    get_recent_conversation,
+)
 
 st.set_page_config(
     page_title="Asistente de Programación",
@@ -171,8 +176,13 @@ if "session_id" not in st.session_state:
     if query_session_id:
         st.session_state.session_id = query_session_id
     else:
-        st.session_state.session_id = f"streamlit-{uuid4().hex}"
-        st.query_params["session_id"] = st.session_state.session_id
+        last_session_id = get_last_conversation_session_id()
+        st.session_state.session_id = (
+            last_session_id
+            if last_session_id
+            else f"streamlit-{uuid4().hex}"
+        )
+    st.query_params["session_id"] = st.session_state.session_id
 
 if "messages" not in st.session_state:
     st.session_state.messages = get_recent_conversation(

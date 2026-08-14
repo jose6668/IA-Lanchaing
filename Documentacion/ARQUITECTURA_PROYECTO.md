@@ -145,7 +145,7 @@ El prompt se construye como mensajes:
 
 Esta decision evita convertir el historial en texto plano y permite que LangChain gestione mensajes de usuario/asistente correctamente.
 
-Cada sesion conserva como maximo 20 mensajes. Cuando se supera ese limite, se eliminan los mensajes mas antiguos y se conservan los mas recientes. El `session_id` tambien se mantiene en los query params de Streamlit para poder recuperar una conversacion si se conserva la misma URL.
+Cada sesion conserva como maximo 20 mensajes. Cuando se supera ese limite, se eliminan los mensajes mas antiguos y se conservan los mas recientes. El `session_id` tambien se mantiene en los query params de Streamlit para poder recuperar una conversacion si se conserva la misma URL. Si la app inicia sin `session_id` en la URL, intenta recuperar el ultimo `session_id` persistido antes de crear uno nuevo.
 
 ## 10. Arquitectura visual
 

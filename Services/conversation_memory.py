@@ -148,3 +148,23 @@ def get_recent_messages_for_ui(
         )
 
     return ui_messages
+
+
+def get_latest_session_id(db_path: Path) -> str | None:
+    if not db_path.exists():
+        return None
+
+    with sqlite3.connect(db_path, check_same_thread=False) as connection:
+        row = connection.execute(
+            """
+            SELECT session_id
+            FROM conversation_messages
+            ORDER BY id DESC
+            LIMIT 1
+            """
+        ).fetchone()
+
+    if not row:
+        return None
+
+    return str(row[0])

@@ -10,6 +10,7 @@ from Models.config import (
     TEMPERATURE,
 )
 from Services.conversation_memory import get_recent_messages_for_ui
+from Services.conversation_memory import get_latest_session_id
 from Services.conversation_memory import SQLiteLimitedChatMessageHistory
 
 
@@ -115,3 +116,9 @@ def clear_conversation(session_id: str) -> None:
         max_messages=MAX_HISTORY_MESSAGES,
     )
     history.clear()
+
+
+def get_last_conversation_session_id() -> str | None:
+    """Devuelve la ultima sesion persistida, si existe."""
+
+    return get_latest_session_id(MEMORY_DB_PATH)
