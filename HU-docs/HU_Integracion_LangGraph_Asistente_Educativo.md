@@ -1,5 +1,7 @@
 # HU-003 - Integracion de LangGraph en el asistente educativo
 
+> Nota de actualizacion V04: esta HU documenta la integracion de LangGraph. En la version actual, el grafo se conserva, pero `app.py` envia siempre un tono fijo y el modo `Aprendizaje guiado`.
+
 ## 1. Descripcion
 
 Esta historia de usuario propone evolucionar el proyecto `IA-Lanchaing` desde un flujo lineal basado en Streamlit, LangChain y RAG hacia una arquitectura orquestada con LangGraph.
