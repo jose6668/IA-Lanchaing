@@ -1,5 +1,7 @@
 # HU-002 - Asistente educativo de programacion con RAG diagnostico
 
+> Nota de actualizacion V04: esta HU documenta la incorporacion del RAG diagnostico. En la version actual, la seleccion de tono y modo ya no esta disponible para el usuario; el sistema funciona con tono fijo y aprendizaje guiado fijo.
+
 ## 1. Resumen de la historia de usuario
 
 Se implemento una funcionalidad para que un estudiante pueda interactuar con un asistente educativo de programacion desde una interfaz web. El asistente responde preguntas generales, adapta su estilo de respuesta segun el tono y modo de aprendizaje seleccionados, y puede usar un diagnostico educativo en PDF como fuente de contexto cuando la pregunta esta relacionada con los resultados del grupo.
@@ -157,4 +159,3 @@ flowchart TD
 ## 7. Resultado final de la HU
 
 La HU deja implementado un asistente educativo funcional con Streamlit, LangChain, OpenAI y ChromaDB. El usuario puede conversar con el asistente, personalizar el estilo de respuesta y obtener respuestas apoyadas en un diagnostico educativo previamente vectorizado.
-
