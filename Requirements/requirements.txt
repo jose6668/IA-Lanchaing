@@ -1,0 +1,12 @@
+# Dependencias principales del asistente educativo
+streamlit
+
+# LangChain, LangGraph y conectores
+langchain
+langchain-core
+langchain-openai
+langgraph
+
+# Modelos y tokenizacion de OpenAI
+openai
+tiktoken
