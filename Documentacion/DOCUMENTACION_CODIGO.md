@@ -2,11 +2,15 @@
 
 ## 1. Descripcion general
 
+<<<<<<< HEAD
 El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, recuperacion RAG con ChromaDB y orquestacion mediante LangGraph.
 
 En la version actual, V04, el objetivo pedagogico principal es el aprendizaje guiado. El asistente debe orientar al estudiante paso a paso, explicar el razonamiento, detenerse para que el estudiante trabaje cada parte y evitar entregar la respuesta final o el codigo completo de inmediato.
+=======
+El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, orquestacion mediante LangGraph, clasificacion de consultas con un LLM y memoria conversacional temporal por sesion.
+>>>>>>> HU-005-fase-5-QA
 
-Cuando la pregunta del usuario esta relacionada con el diagnostico educativo, el sistema recupera informacion desde un PDF indexado en ChromaDB. Cuando la pregunta es de programacion general o revision de codigo, el grafo dirige la consulta hacia nodos de generacion que no usan el diagnostico.
+El objetivo pedagogico principal es el aprendizaje guiado. El asistente orienta al estudiante paso a paso, explica el razonamiento, ofrece pistas progresivas y evita entregar respuestas finales o codigo completo de inmediato.
 
 Tecnologias principales:
 
@@ -15,11 +19,9 @@ Tecnologias principales:
 | Python | Lenguaje principal del proyecto. |
 | Streamlit | Interfaz web, chat, tema visual y estado de sesion. |
 | LangGraph | Orquestacion del flujo mediante nodos y estado compartido. |
-| LangChain / LCEL | Composicion de prompts y cadena del modelo. |
-| langchain-openai | Integracion con `ChatOpenAI` y `OpenAIEmbeddings`. |
-| ChromaDB | Base vectorial local y persistente. |
-| PyPDFLoader | Carga del PDF diagnostico. |
-| RecursiveCharacterTextSplitter | Fragmentacion del documento en chunks. |
+| LangChain / LCEL | Composicion de prompts, modelo y parser. |
+| langchain-openai | Integracion con `ChatOpenAI`. |
+| RunnableWithMessageHistory | Memoria conversacional por `session_id`. |
 
 ## 2. Estructura actual
 
@@ -27,9 +29,6 @@ Tecnologias principales:
 IA-Lanchaing/
 |-- app.py
 |-- README.md
-|-- chroma_diagnostico/
-|-- docs/
-|   `-- Reporte_Ejecutivo_Encuesta_Programacion.pdf
 |-- Documentacion/
 |   |-- ARQUITECTURA_PROYECTO.md
 |   `-- DOCUMENTACION_CODIGO.md
@@ -38,9 +37,14 @@ IA-Lanchaing/
 |   `-- learning_graph.py
 |-- HU-docs/
 |   |-- HU-001 - Asistente educativo de programacion con seleccion de tono.md
+<<<<<<< HEAD
 |   |-- HU_Asistente_Educativo_RAG.md
 |   |-- HU_Integracion_LangGraph_Asistente_Educativo.md
 |   `-- HU_04.md
+=======
+|   |-- HU_04.md
+|   `-- HU_05.md
+>>>>>>> HU-005-fase-5-QA
 |-- Models/
 |   `-- config.py
 |-- Prompts/
@@ -48,9 +52,7 @@ IA-Lanchaing/
 |-- Requirements/
 |   `-- requirements.txt
 |-- Services/
-|   |-- diagnostic_rag.py
-|   |-- ejemplo_Asistente_IA.py
-|   `-- setup_diagnostic_rag.py
+|   `-- ejemplo_Asistente_IA.py
 `-- UI/
     `-- asistente.py
 ```
@@ -64,6 +66,7 @@ streamlit run app.py
 Flujo general:
 
 1. `app.py` configura la pagina.
+<<<<<<< HEAD
 2. `app.py` inyecta el CSS de la paleta visual V04.
 3. Inicializa `st.session_state.messages`.
 4. Define `DEFAULT_ASSISTANT_TONE` como `Normal, claro y amigable`.
@@ -77,11 +80,24 @@ Flujo general:
 12. Se genera una respuesta bajo reglas de aprendizaje guiado.
 13. Se devuelven fuentes si aplica.
 14. Streamlit guarda respuesta y ejecuta `st.rerun()`.
+=======
+2. Inicializa `st.session_state.messages`.
+3. Inicializa `st.session_state.session_id`.
+4. Renderiza sidebar, chat y temas sugeridos.
+5. Recibe preguntas con `st.chat_input`.
+6. Llama a `ask_assistant()` desde `UI/asistente.py`.
+7. `ask_assistant()` invoca `LearningAssistantGraph`.
+8. El grafo clasifica la consulta con un LLM.
+9. LangGraph enruta hacia el nodo correspondiente.
+10. La respuesta se genera con memoria conversacional.
+11. Streamlit guarda la respuesta en el historial visual.
+>>>>>>> HU-005-fase-5-QA
 
-## 4. Documentacion por modulo
+## 4. `app.py`
 
-### `app.py`
+Responsabilidad: manejar la interfaz de usuario, aplicar el tema visual y enviar consultas al asistente.
 
+<<<<<<< HEAD
 Responsabilidad: manejar la interfaz de usuario, aplicar el tema visual y fijar la estrategia pedagogica que se envia al asistente.
 
 Elementos relevantes:
@@ -92,14 +108,20 @@ Elementos relevantes:
 | `DEFAULT_ASSISTANT_TONE` | Define el tono fijo `Normal, claro y amigable`. |
 | `DEFAULT_LEARNING_MODE` | Define el modo fijo `Aprendizaje guiado`. |
 | `st.session_state.messages` | Mantiene el historial visual del chat durante la sesion. |
+=======
+Elementos relevantes:
+>>>>>>> HU-005-fase-5-QA
 
-Funciones locales:
-
-| Funcion | Descripcion |
+| Elemento | Descripcion |
 | --- | --- |
-| `diagnostic_is_configured()` | Verifica si existe la ruta de Chroma configurada. |
-| `configure_diagnostic()` | Ejecuta el procesamiento del PDF y reconstruye la base vectorial. |
+| `st.set_page_config()` | Configura titulo, icono y layout. |
+| CSS con `st.markdown()` | Aplica el estilo visual de la aplicacion. |
+| `st.session_state.messages` | Guarda el historial visible del chat. |
+| `st.session_state.session_id` | Identifica la memoria conversacional de la sesion. |
+| `DEFAULT_ASSISTANT_TONE` | Tono fijo enviado al grafo. |
+| `DEFAULT_LEARNING_MODE` | Modo pedagogico fijo enviado al grafo. |
 
+<<<<<<< HEAD
 Decisiones V04:
 
 - Ya no existe selector de tono.
@@ -108,22 +130,26 @@ Decisiones V04:
 - La aplicacion sigue enviando `tono` y `modo_aprendizaje` para no modificar la interfaz interna del grafo.
 
 ### `UI/asistente.py`
+=======
+Cuando el usuario limpia el chat, tambien se genera un nuevo `session_id`. Esto evita que la memoria interna conserve informacion de una conversacion que visualmente ya fue borrada.
+
+## 5. `UI/asistente.py`
+>>>>>>> HU-005-fase-5-QA
 
 Responsabilidad: adaptar la interfaz Streamlit al grafo de LangGraph.
 
 | Funcion | Retorno | Descripcion |
 | --- | --- | --- |
-| `initialize_system()` | `LearningAssistantGraph` | Crea y cachea el grafo del asistente. Valida que Chroma tenga fragmentos. |
-| `ask_assistant(question, tono, modo_aprendizaje)` | `(response, diagnostic_sources)` | Limpia la pregunta, invoca el grafo y devuelve respuesta/fuentes. |
-| `get_assistant_info()` | `dict` | Devuelve metadatos publicos del asistente para la UI. |
+| `initialize_system()` | `LearningAssistantGraph` | Crea y cachea el grafo del asistente. |
+| `ask_assistant(question, tono, modo_aprendizaje, session_id)` | `(response, [])` | Limpia la pregunta, invoca el grafo y devuelve la respuesta. |
+| `get_assistant_info()` | `dict` | Devuelve metadatos publicos del asistente. |
 
-Errores manejados:
+Manejo de errores:
 
-- `FileNotFoundError`: base vectorial inexistente.
-- `RuntimeError`: coleccion vectorial vacia.
-- `Exception`: error general al procesar la consulta.
+- Pregunta vacia: devuelve una respuesta amable solicitando una pregunta.
+- Error general: captura la excepcion, registra el error y devuelve un mensaje tecnico controlado.
 
-### `Graphs/learning_graph.py`
+## 6. `Graphs/learning_graph.py`
 
 Responsabilidad: orquestar el flujo del asistente educativo con LangGraph.
 
@@ -131,14 +157,16 @@ Elementos principales:
 
 | Elemento | Tipo | Descripcion |
 | --- | --- | --- |
-| `LearningAssistantState` | `TypedDict` | Estado compartido entre nodos del grafo. |
-| `LearningAssistantGraph` | Clase | Construye modelo, prompt, cadena LCEL, RAG y grafo compilado. |
+| `VALID_CATEGORIES` | `set[str]` | Categorias permitidas por el clasificador. |
+| `LearningAssistantState` | `TypedDict` | Estado compartido entre nodos. |
+| `LearningAssistantGraph` | Clase | Construye modelo, cadenas, memoria y grafo compilado. |
 | `create_learning_assistant_graph()` | Funcion | Factory usada por `UI/asistente.py`. |
 
-Estado:
+### Estado
 
 | Campo | Descripcion |
 | --- | --- |
+<<<<<<< HEAD
 | `question` | Pregunta limpia del usuario. |
 | `tono` | Tono recibido desde `app.py`; en V04 es fijo. |
 | `modo_aprendizaje` | Modo recibido desde `app.py`; en V04 es fijo como aprendizaje guiado. |
@@ -148,33 +176,52 @@ Estado:
 | `respuesta` | Respuesta generada por el modelo. |
 | `requiere_revision_codigo` | Bandera para consultas de revision de codigo. |
 | `historial` | Trazas simples del flujo ejecutado. |
+=======
+| `question` | Pregunta del usuario. |
+| `session_id` | Identificador de memoria conversacional. |
+| `tono` | Tono de respuesta. |
+| `modo_aprendizaje` | Estrategia pedagogica. |
+| `tipo_consulta` | Categoria detectada. |
+| `respuesta` | Respuesta final del modelo. |
+| `historial` | Trazas internas del flujo. |
+>>>>>>> HU-005-fase-5-QA
 
-Nodos:
+### Nodos
 
 | Nodo | Descripcion |
 | --- | --- |
+<<<<<<< HEAD
 | `clasificar_consulta` | Usa heuristicas para detectar diagnostico, programacion o revision de codigo. |
 | `recuperar_diagnostico` | Ejecuta `DiagnosticRAG.get_context()` cuando la consulta requiere RAG. |
 | `generar_respuesta_programacion` | Invoca la cadena sin contexto diagnostico. |
 | `generar_respuesta_diagnostico` | Invoca la cadena con contexto recuperado desde ChromaDB. |
 | `analizar_codigo` | Procesa revision de codigo bajo reglas de aprendizaje guiado. |
 | `respuesta_final` | Cierra el flujo y deja la respuesta lista para la UI. |
+=======
+| `clasificar_consulta` | Usa un LLM para clasificar la pregunta. |
+| `generar_respuesta_programacion` | Genera una respuesta guiada de programacion. |
+| `generar_revision_codigo` | Guia la revision de codigo o errores. |
+| `responder_con_historial` | Usa la memoria conversacional para responder. |
+| `responder_restriccion` | Rechaza preguntas fuera de dominio de forma amable. |
+| `respuesta_final` | Cierra el flujo. |
+>>>>>>> HU-005-fase-5-QA
 
-### `Services/diagnostic_rag.py`
+### Clasificador
 
-Responsabilidad: recuperar informacion del diagnostico educativo desde ChromaDB.
+El clasificador responde exclusivamente con una de estas categorias:
 
-Funciones auxiliares:
+```text
+programacion
+revision_codigo
+historial
+restriccion
+```
 
-| Funcion | Descripcion |
-| --- | --- |
-| `normalize_text(text)` | Convierte a minusculas y elimina tildes. |
-| `is_diagnostic_question(question)` | Detecta consultas relacionadas con diagnostico, encuesta, reporte o grupo. |
-| `is_summary_question(question)` | Detecta solicitudes de resumen. |
-| `main()` | Ejecuta pruebas manuales por consola. |
+Si la respuesta del clasificador no coincide con una categoria valida, `_normalize_category()` usa `restriccion` como fallback.
 
-Metodos de `DiagnosticRAG`:
+### Memoria
 
+<<<<<<< HEAD
 | Metodo | Descripcion |
 | --- | --- |
 | `__init__(chroma_path)` | Valida existencia de Chroma e inicializa embeddings y vectorstore. |
@@ -185,43 +232,60 @@ Metodos de `DiagnosticRAG`:
 | `format_context(documents)` | Convierte documentos recuperados en texto para el prompt. |
 | `build_sources(documents)` | Deduplica fuentes por archivo y pagina. |
 | `get_context(question)` | API principal usada por el nodo `recuperar_diagnostico`. |
+=======
+La memoria se guarda en:
+>>>>>>> HU-005-fase-5-QA
 
-### `Services/setup_diagnostic_rag.py`
+```python
+self.memory_store: dict[str, InMemoryChatMessageHistory] = {}
+```
 
-Responsabilidad: construir la base vectorial del diagnostico.
+Cada `session_id` tiene su propio historial. La cadena principal usa:
 
-| Metodo | Descripcion |
-| --- | --- |
-| `validate_pdf()` | Verifica que el archivo exista y sea `.pdf`. |
-| `load_document()` | Carga paginas con `PyPDFLoader` y agrega metadata. |
-| `split_documents(documents)` | Divide paginas en chunks con overlap. |
-| `remove_existing_vectorstore()` | Elimina el indice anterior para evitar duplicados. |
-| `create_vectorstore(chunks)` | Crea la coleccion Chroma desde los chunks. |
-| `setup()` | Ejecuta el flujo completo. |
+```python
+RunnableWithMessageHistory(
+    chain,
+    self.get_session_history,
+    input_messages_key="question",
+    history_messages_key="history",
+)
+```
 
-### `Models/config.py`
+## 7. `Prompts/prompt.py`
 
-Responsabilidad: centralizar configuracion.
+Responsabilidad: definir `PROGRAMMING_TEMPLATE`.
+
+El prompt contiene:
+
+- Rol del asistente como docente y mentor de programacion.
+- Tono.
+- Modo de aprendizaje.
+- Tipo de consulta.
+- Reglas generales de aprendizaje guiado.
+- Reglas para `programacion`.
+- Reglas para `revision_codigo`.
+- Reglas para `historial`.
+- Reglas para `restriccion`.
+
+El historial no se inserta como texto dentro del template. Se inyecta como mensajes reales usando `MessagesPlaceholder` desde `Graphs/learning_graph.py`.
+
+## 8. `Models/config.py`
+
+Responsabilidad: centralizar configuracion basica.
 
 | Constante | Valor |
 | --- | --- |
 | `BASE_DIR` | Raiz del proyecto. |
-| `DOCS_DIR` | Carpeta `docs/`. |
-| `DIAGNOSTIC_CHROMA_PATH` | Carpeta `chroma_diagnostico/`. |
 | `MODEL_NAME` | `gpt-4o-mini` |
-| `EMBEDDINGS_MODEL` | `text-embedding-3-small` |
 | `TEMPERATURE` | `0.3` |
-| `RETRIEVAL_K` | `2` |
-| `DIAGNOSTIC_COLLECTION_NAME` | `student_diagnostic` |
 
-### `Prompts/prompt.py`
+## 9. `Requirements/requirements.txt`
 
-Responsabilidad: definir `PROGRAMMING_TEMPLATE`.
+Dependencias principales:
 
-Variables requeridas:
-
-| Variable | Descripcion |
+| Paquete | Uso |
 | --- | --- |
+<<<<<<< HEAD
 | `tono` | Estilo de comunicacion. En V04 llega fijo desde `app.py`. |
 | `modo_aprendizaje` | Estrategia pedagogica. En V04 llega fija como `Aprendizaje guiado`. |
 | `tipo_consulta` | Puede ser `diagnostico`, `programacion` o `revision_codigo`. |
@@ -302,6 +366,17 @@ Procesar o reconstruir el diagnostico:
 ```bash
 python -m Services.setup_diagnostic_rag
 ```
+=======
+| `streamlit` | Interfaz web. |
+| `langchain` | Base de cadenas y abstracciones. |
+| `langchain-core` | Prompts, parsers y memoria. |
+| `langchain-openai` | Integracion con OpenAI. |
+| `langgraph` | Orquestacion del flujo. |
+| `openai` | Cliente OpenAI. |
+| `tiktoken` | Tokenizacion. |
+
+## 10. Comandos utiles
+>>>>>>> HU-005-fase-5-QA
 
 Ejecutar la aplicacion:
 
@@ -309,20 +384,25 @@ Ejecutar la aplicacion:
 streamlit run app.py
 ```
 
-Probar recuperacion RAG por consola:
+Validar sintaxis de archivos principales:
 
 ```bash
-python -m Services.diagnostic_rag
+python -m py_compile app.py Graphs/learning_graph.py UI/asistente.py Models/config.py Prompts/prompt.py
 ```
 
-Validar sintaxis de los archivos principales:
+Buscar referencias eliminadas:
 
 ```bash
+<<<<<<< HEAD
 python -m py_compile app.py Graphs/learning_graph.py UI/asistente.py Services/diagnostic_rag.py Prompts/prompt.py
+=======
+rg "diagnost|RAG|Chroma|PDF|embedding|pypdf" app.py Graphs UI Models Prompts Requirements
+>>>>>>> HU-005-fase-5-QA
 ```
 
-## 7. Pruebas recomendadas
+## 11. Estado actual del codigo
 
+<<<<<<< HEAD
 - `normalize_text()` elimina tildes correctamente.
 - `is_diagnostic_question()` clasifica preguntas del diagnostico.
 - `is_summary_question()` detecta resumenes.
@@ -333,9 +413,17 @@ python -m py_compile app.py Graphs/learning_graph.py UI/asistente.py Services/di
 - El prompt no entrega soluciones completas en la primera respuesta.
 - `app.py` envia siempre `DEFAULT_ASSISTANT_TONE`.
 - `app.py` envia siempre `DEFAULT_LEARNING_MODE`.
+=======
+Implementado:
+>>>>>>> HU-005-fase-5-QA
 
-## 8. Hallazgos y mejoras recomendadas
+- Grafo con cuatro rutas principales.
+- Clasificacion con LLM.
+- Memoria temporal por sesion.
+- Restriccion fuera de dominio.
+- Eliminacion de dependencias de RAG.
 
+<<<<<<< HEAD
 | Prioridad | Hallazgo | Recomendacion |
 | --- | --- | --- |
 | Alta | No hay pruebas del grafo. | Agregar tests para nodos y rutas condicionales. |
@@ -344,3 +432,10 @@ python -m py_compile app.py Graphs/learning_graph.py UI/asistente.py Services/di
 | Media | CSS visual esta dentro de `app.py`. | Mantener asi por ahora; mover a helper si crece la UI. |
 | Baja | Imports wildcard en `app.py`. | Reemplazar por imports explicitos. |
 | Baja | Codigo legado en `Services/ejemplo_Asistente_IA.py`. | Actualizarlo o retirarlo. |
+=======
+Pendiente recomendado:
+
+- Pruebas automatizadas del grafo.
+- Streaming de respuestas.
+- Persistencia real de memoria cuando se avance a bases de datos.
+>>>>>>> HU-005-fase-5-QA

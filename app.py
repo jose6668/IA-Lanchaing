@@ -1,8 +1,7 @@
 import streamlit as st
+from uuid import uuid4
 
-from UI.asistente import *
-from Models.config import *
-from Services.setup_diagnostic_rag import DiagnosticDocumentProcessor
+from UI.asistente import ask_assistant
 
 st.set_page_config(
     page_title="Asistente de Programación",
@@ -20,10 +19,19 @@ st.markdown(
             --color-azul-oscuro: #155F82;
             --color-superficie: #F7FBFA;
             --color-texto: #173642;
+<<<<<<< HEAD
         }
 
         .stApp {
             background: var(--color-superficie);
+=======
+            --color-borde: rgba(149, 209, 220, 0.75);
+        }
+
+        .stApp {
+            background:
+                linear-gradient(180deg, #E7F0EA 0%, #F7FBFA 34%, #FFFFFF 100%);
+>>>>>>> HU-005-fase-5-QA
             color: var(--color-texto);
         }
 
@@ -50,6 +58,19 @@ st.markdown(
             color: var(--color-azul);
         }
 
+<<<<<<< HEAD
+=======
+        p, li, label, span, div {
+            color: var(--color-texto);
+        }
+
+        [data-testid="stMarkdownContainer"] p,
+        [data-testid="stMarkdownContainer"] li {
+            color: var(--color-texto) !important;
+            line-height: 1.7;
+        }
+
+>>>>>>> HU-005-fase-5-QA
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
             border-right: 4px solid var(--color-celeste);
@@ -62,6 +83,23 @@ st.markdown(
             color: var(--color-azul);
         }
 
+<<<<<<< HEAD
+=======
+        .sidebar-guide {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid var(--color-borde);
+            border-left: 5px solid var(--color-azul);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--color-texto);
+            line-height: 1.65;
+        }
+
+        .sidebar-guide strong {
+            color: var(--color-azul);
+        }
+
+>>>>>>> HU-005-fase-5-QA
         .stButton > button {
             background-color: var(--color-azul);
             border: 1px solid var(--color-azul);
@@ -76,15 +114,40 @@ st.markdown(
         }
 
         [data-testid="stAlert"] {
+<<<<<<< HEAD
+=======
+            background-color: rgba(149, 209, 220, 0.28);
+>>>>>>> HU-005-fase-5-QA
             border-radius: 8px;
             border-left: 5px solid var(--color-celeste);
         }
 
+<<<<<<< HEAD
         [data-testid="stChatMessage"] {
             background-color: rgba(231, 240, 234, 0.52);
             border-left: 5px solid var(--color-celeste);
             border-radius: 8px;
             padding: 0.5rem;
+=======
+        [data-testid="stAlert"] *,
+        [data-testid="stAlert"] p,
+        [data-testid="stAlert"] li {
+            color: var(--color-texto) !important;
+        }
+
+        [data-testid="stChatMessage"] {
+            background-color: rgba(255, 255, 255, 0.78);
+            border-left: 5px solid var(--color-celeste);
+            border-radius: 8px;
+            padding: 0.65rem;
+            box-shadow: 0 8px 22px rgba(26, 119, 163, 0.07);
+        }
+
+        [data-testid="stChatMessage"] p,
+        [data-testid="stChatMessage"] li,
+        [data-testid="stChatMessage"] code {
+            color: var(--color-texto) !important;
+>>>>>>> HU-005-fase-5-QA
         }
 
         [data-testid="stChatMessage"]:has(
@@ -100,13 +163,21 @@ st.markdown(
         }
 
         [data-testid="stChatInput"] > div {
+<<<<<<< HEAD
             background-color: var(--color-superficie) !important;
+=======
+            background-color: #FFFFFF !important;
+>>>>>>> HU-005-fase-5-QA
             border: 2px solid var(--color-celeste) !important;
             box-shadow: none !important;
         }
 
         [data-testid="stChatInput"] textarea {
+<<<<<<< HEAD
             background-color: var(--color-superficie) !important;
+=======
+            background-color: #FFFFFF !important;
+>>>>>>> HU-005-fase-5-QA
             color: var(--color-texto) !important;
         }
 
@@ -130,6 +201,7 @@ st.markdown(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+<<<<<<< HEAD
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
@@ -159,7 +231,13 @@ def configure_diagnostic() -> bool:
         )
 
         return False
+=======
+if "session_id" not in st.session_state:
+    st.session_state.session_id = f"streamlit-{uuid4().hex}"
+>>>>>>> HU-005-fase-5-QA
 
+DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
+DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
 
 st.title(
@@ -167,8 +245,7 @@ st.title(
 )
 
 st.caption(
-    "Tutor educativo personalizado mediante "
-    "un diagnóstico de necesidades estudiantiles"
+    "Tutor educativo guiado para aprender programación paso a paso"
 )
 
 st.divider()
@@ -176,6 +253,7 @@ st.divider()
 
 
 with st.sidebar:
+<<<<<<< HEAD
     st.header("📋 Información del sistema")
 
     assistant_info = get_assistant_info()
@@ -229,6 +307,20 @@ with st.sidebar:
         "Aprendizaje guiado: el asistente orienta paso a paso "
         "con preguntas y pistas, sin entregar la solución completa "
         "de inmediato."
+=======
+    st.header("Guía de uso")
+
+    st.markdown(
+        """
+        <div class="sidebar-guide">
+            <strong>Este asistente te ayuda a aprender programación.</strong>
+            Escribe una pregunta, comparte una duda o pega un fragmento de
+            código. Recibirás orientación paso a paso, con pistas y preguntas
+            para que puedas construir la solución por tu cuenta.
+        </div>
+        """,
+        unsafe_allow_html=True,
+>>>>>>> HU-005-fase-5-QA
     )
 
     st.divider()
@@ -240,6 +332,7 @@ with st.sidebar:
         key="clear_chat_button",
     ):
         st.session_state.messages = []
+        st.session_state.session_id = f"streamlit-{uuid4().hex}"
         st.rerun()
 
 
@@ -255,7 +348,7 @@ with chat_column:
     if not st.session_state.messages:
         st.info(
             "Escribe una pregunta de programación "
-            "o consulta los resultados del diagnóstico."
+            "o comparte un fragmento de código para recibir ayuda guiada."
         )
 
     for message in st.session_state.messages:
@@ -265,15 +358,6 @@ with chat_column:
             st.markdown(
                 message["content"]
             )
-
-            diagnostic_sources = (
-                message.get(
-                    "diagnostic_sources",
-                    [],
-                )
-            )
-
-            
 
 
 with topics_column:
@@ -285,14 +369,13 @@ with topics_column:
         """
         Puedes preguntar:
 
-        - ¿Cuál es la principal dificultad del grupo?
-        - ¿Cuántos estudiantes sienten frustración?
-        - ¿Qué prefieren los estudiantes al aprender?
         - ¿Qué es una variable?
         - ¿Qué es un ciclo `for`?
         - ¿Cómo funciona un `if`?
         - Explícame las listas en Python.
         - Ayúdame a corregir este código.
+        - ¿Cómo divido este problema en pasos?
+        - ¿Qué debo revisar antes de ejecutar mi programa?
         """
     )
 
@@ -314,11 +397,15 @@ if user_input:
     with st.spinner(
         "💻 Analizando tu pregunta..."
     ):
-        response, diagnostic_sources = (
+        response, _ = (
             ask_assistant(
                 question=user_input,
                 tono=DEFAULT_ASSISTANT_TONE,
                 modo_aprendizaje=DEFAULT_LEARNING_MODE,
+<<<<<<< HEAD
+=======
+                session_id=st.session_state.session_id,
+>>>>>>> HU-005-fase-5-QA
             )
         )
 
@@ -326,9 +413,6 @@ if user_input:
         {
             "role": "assistant",
             "content": response,
-            "diagnostic_sources": (
-                diagnostic_sources
-            ),
         }
     )
 
@@ -341,8 +425,16 @@ st.divider()
 st.markdown(
     """
     <div class="palette-footer" style="text-align: center;">
+<<<<<<< HEAD
         💻 Asistente educativo con RAG diagnóstico
+=======
+        💻 Asistente educativo de programación
+>>>>>>> HU-005-fase-5-QA
     </div>
     """,
     unsafe_allow_html=True,
 )
+<<<<<<< HEAD
+=======
+
+>>>>>>> HU-005-fase-5-QA

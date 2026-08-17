@@ -2,11 +2,17 @@
 
 ## 1. Descripcion general
 
+<<<<<<< HEAD
 El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual, V04, define una experiencia de aprendizaje guiado: el asistente no debe entregar respuestas completas de inmediato, sino orientar al estudiante paso a paso, explicar el razonamiento y detenerse para que el estudiante intente avanzar.
 
 Ademas de responder preguntas generales de programacion, el asistente integra un flujo RAG sobre un documento PDF de diagnostico educativo. Cuando la consulta esta relacionada con la encuesta, el grupo, los estudiantes o el reporte, el sistema recupera fragmentos relevantes desde ChromaDB y los incorpora al prompt del modelo.
 
 La aplicacion usa LangGraph como capa de orquestacion. Esto permite separar el proceso de respuesta en nodos: clasificacion de consulta, recuperacion diagnostica, generacion de respuesta, revision de codigo y respuesta final.
+=======
+El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual se centra en tres capacidades: clasificar consultas con un LLM, enrutar el flujo con LangGraph y mantener memoria temporal por sesion.
+
+El asistente ya no usa recuperacion documental, PDF, embeddings ni base vectorial. Su dominio queda limitado a programacion, revision de codigo e historial conversacional relacionado con el aprendizaje.
+>>>>>>> HU-005-fase-5-QA
 
 ## 2. Alcance del sistema
 
@@ -15,6 +21,7 @@ Responsabilidades implementadas:
 - Renderizar una interfaz de chat con Streamlit.
 - Mantener un tono fijo: `Normal, claro y amigable`.
 - Mantener un modo pedagogico fijo: `Aprendizaje guiado`.
+<<<<<<< HEAD
 - Aplicar una paleta visual personalizada en la interfaz.
 - Procesar un PDF diagnostico mediante LangChain.
 - Dividir el documento en fragmentos recuperables.
@@ -24,20 +31,26 @@ Responsabilidades implementadas:
 - Clasificar consultas como diagnostico, programacion o revision de codigo.
 - Mantener historial de chat en `st.session_state`.
 - Documentar dependencias en `Requirements/requirements.txt`.
+=======
+- Clasificar consultas mediante un LLM.
+- Enrutar la conversacion mediante LangGraph.
+- Generar respuestas pedagogicas con OpenAI.
+- Mantener memoria conversacional temporal mediante `RunnableWithMessageHistory`.
+- Restringir preguntas fuera del dominio de programacion.
+- Reiniciar la memoria cuando el usuario limpia el chat.
+>>>>>>> HU-005-fase-5-QA
 
 Fuera del alcance actual:
 
-- Autenticacion y autorizacion.
-- API REST propia.
-- Persistencia permanente del historial conversacional.
-- Checkpointing de LangGraph.
-- Human-in-the-loop.
-- Agents o Tools de LangChain.
-- Evaluaciones automaticas.
-- Observabilidad avanzada con LangSmith.
-- Despliegue cloud documentado.
-- Pruebas automatizadas.
+- Persistencia permanente del historial.
+- Base de datos para sesiones.
+- RAG documental.
+- Herramientas externas o agentes con tools.
+- Checkpointing persistente de LangGraph.
+- Autenticacion.
+- Pruebas automatizadas completas.
 
+<<<<<<< HEAD
 ## 3. Decisiones arquitectonicas de la V04
 
 | Decision | Justificacion |
@@ -61,11 +74,24 @@ Fuera del alcance actual:
 | LangGraph | Si | `Graphs/learning_graph.py` define estado, nodos y rutas condicionales. |
 | Theming local | Si | `app.py` inyecta CSS con la paleta visual de la V04. |
 | Microservicios | No | No hay servicios separados ni comunicacion entre procesos. |
+=======
+## 3. Decisiones arquitectonicas
+
+| Decision | Justificacion |
+| --- | --- |
+| Eliminar diagnostico/RAG | El nuevo alcance no requiere PDF, ChromaDB ni embeddings. |
+| Clasificar con LLM | Evita depender de palabras clave fragiles o errores ortograficos exactos. |
+| Usar una sola categoria por consulta | Mantiene el grafo simple para la etapa actual del aprendizaje. |
+| Priorizar `revision_codigo` | Si el usuario pega codigo, el flujo mas util es revisar el codigo antes que explicar teoria general. |
+| Usar memoria temporal en memoria RAM | Permite practicar `session_id` sin introducir base de datos todavia. |
+| Reiniciar memoria con nuevo `session_id` | Limpiar el chat debe iniciar una conversacion nueva. |
+>>>>>>> HU-005-fase-5-QA
 
 ## 5. Componentes principales
 
 | Componente | Archivo o carpeta | Responsabilidad |
 | --- | --- | --- |
+<<<<<<< HEAD
 | Interfaz Streamlit | `app.py` | Renderiza pagina, sidebar, chat, controles de diagnostico, constantes pedagogicas y tema visual. |
 | Adaptador del asistente | `UI/asistente.py` | Inicializa el grafo cacheado, procesa preguntas y devuelve respuesta/fuentes a Streamlit. |
 | Grafo educativo | `Graphs/learning_graph.py` | Orquesta el flujo con LangGraph y separa nodos especializados. |
@@ -105,16 +131,49 @@ flowchart TD
     CONST --> ASIS[UI/asistente.py]
     ASIS --> GRAPH[LearningAssistantGraph]
     GRAPH --> CLAS[clasificar_consulta]
-    CLAS --> ROUTE{tipo_consulta}
-    ROUTE -->|diagnostico| RAG[recuperar_diagnostico]
-    ROUTE -->|programacion| PROG[generar_respuesta_programacion]
-    ROUTE -->|revision_codigo| CODE[analizar_codigo]
-    RAG --> DIAG[generar_respuesta_diagnostico]
-    PROG --> FINAL[respuesta_final]
-    CODE --> FINAL
-    DIAG --> FINAL
+=======
+| Interfaz Streamlit | `app.py` | Renderiza pagina, chat, sidebar, temas sugeridos y estado visual. |
+| Adaptador del asistente | `UI/asistente.py` | Inicializa el grafo cacheado y procesa consultas desde Streamlit. |
+| Grafo educativo | `Graphs/learning_graph.py` | Clasifica, enruta y genera respuestas por nodos. |
+| Configuracion | `Models/config.py` | Define modelo, temperatura y ruta base. |
+| Prompt | `Prompts/prompt.py` | Define reglas pedagogicas y comportamiento por tipo de consulta. |
+| Dependencias | `Requirements/requirements.txt` | Lista dependencias necesarias del proyecto. |
+
+## 5. Arquitectura de componentes
+
+```mermaid
+flowchart LR
+    USER[Usuario] --> APP[app.py]
+    APP --> STATE[st.session_state]
+    APP --> UI[UI/asistente.py]
+    UI --> GRAPH[LearningAssistantGraph]
+    GRAPH --> CLASSIFIER[Clasificador LLM]
+    GRAPH --> MEMORY[RunnableWithMessageHistory]
+    MEMORY --> STORE[InMemoryChatMessageHistory por session_id]
+    GRAPH --> OPENAI[ChatOpenAI]
+    OPENAI --> UI
+    UI --> APP
 ```
 
+## 6. Flujo de LangGraph
+
+```mermaid
+flowchart TD
+    START([START]) --> CLAS[clasificar_consulta]
+>>>>>>> HU-005-fase-5-QA
+    CLAS --> ROUTE{tipo_consulta}
+    ROUTE -->|programacion| PROG[generar_respuesta_programacion]
+    ROUTE -->|revision_codigo| CODE[generar_revision_codigo]
+    ROUTE -->|historial| HIST[responder_con_historial]
+    ROUTE -->|restriccion| REST[responder_restriccion]
+    PROG --> FINAL[respuesta_final]
+    CODE --> FINAL
+    HIST --> FINAL
+    REST --> FINAL
+    FINAL --> END([END])
+```
+
+<<<<<<< HEAD
 ### 6.3 Flujo pedagogico guiado
 
 ```mermaid
@@ -161,26 +220,49 @@ flowchart TD
 | Modo pedagogico | Fijo como `Aprendizaje guiado` |
 
 Estado principal:
+=======
+## 7. Estado principal
+>>>>>>> HU-005-fase-5-QA
 
 ```python
 class LearningAssistantState(TypedDict):
     question: str
+    session_id: str
     tono: str
     modo_aprendizaje: str
     tipo_consulta: str
-    contexto_diagnostico: Optional[str]
-    fuentes: list[dict]
     respuesta: Optional[str]
-    requiere_revision_codigo: bool
     historial: Annotated[list[str], add]
 ```
 
-La cadena de generacion se mantiene como LCEL:
+| Campo | Descripcion |
+| --- | --- |
+| `question` | Pregunta limpia del usuario. |
+| `session_id` | Identificador de la sesion de memoria. |
+| `tono` | Tono fijo enviado desde la interfaz. |
+| `modo_aprendizaje` | Modo pedagogico fijo. |
+| `tipo_consulta` | Categoria clasificada por el LLM. |
+| `respuesta` | Respuesta generada para Streamlit. |
+| `historial` | Trazas simples del flujo ejecutado. |
 
-```python
-prompt_template | llm | StrOutputParser()
+## 8. Clasificacion LLM
+
+Categorias validas:
+
+| Categoria | Descripcion |
+| --- | --- |
+| `programacion` | Preguntas conceptuales o practicas sobre programacion. |
+| `revision_codigo` | Codigo, errores, traceback, debugging o analisis tecnico. |
+| `historial` | Preguntas que dependen de recordar informacion previa o datos compartidos por el usuario. |
+| `restriccion` | Cualquier tema fuera de programacion o historial conversacional. |
+
+Para consultas con varias intenciones se aplica esta prioridad:
+
+```text
+revision_codigo > historial > programacion > restriccion
 ```
 
+<<<<<<< HEAD
 ## 9. Arquitectura visual
 
 La V04 incorpora una paleta visual aplicada desde `app.py` mediante CSS inyectado con `st.markdown`.
@@ -215,3 +297,56 @@ Esta capa visual no modifica la logica de IA ni el flujo de LangGraph. Su respon
 | HU-002 | Incorporacion de RAG diagnostico con ChromaDB. |
 | HU-003 | Integracion de LangGraph para orquestar consultas. |
 | HU-004 | Aprendizaje guiado fijo, tono fijo, paleta visual y dependencias. |
+=======
+## 9. Memoria conversacional
+
+La memoria se implementa con:
+
+- `RunnableWithMessageHistory`
+- `InMemoryChatMessageHistory`
+- `session_id` generado desde `app.py`
+
+El prompt se construye como mensajes:
+
+1. Mensaje de sistema con reglas pedagogicas.
+2. `MessagesPlaceholder` para insertar historial real.
+3. Mensaje humano con la nueva pregunta.
+
+Esta decision evita convertir el historial en texto plano y permite que LangChain gestione mensajes de usuario/asistente correctamente.
+
+## 10. Arquitectura visual
+
+La interfaz mantiene una paleta visual aplicada desde `app.py` mediante CSS inyectado con `st.markdown`. Esta capa no modifica la logica de IA ni el flujo de LangGraph; su responsabilidad es mejorar la legibilidad, identidad visual y consistencia de la experiencia.
+
+| Variable CSS | Color | Uso |
+| --- | --- | --- |
+| `--color-celeste` | `#95D1DC` | Bordes, mensajes y acentos suaves. |
+| `--color-menta` | `#E7F0EA` | Fondo principal y sidebar. |
+| `--color-azul` | `#1A77A3` | Titulos, botones y footer. |
+| `--color-azul-oscuro` | `#155F82` | Hover de botones. |
+| `--color-superficie` | `#F7FBFA` | Fondo claro de la aplicacion. |
+| `--color-texto` | `#173642` | Texto principal. |
+
+## 11. Riesgos tecnicos
+
+| Riesgo | Impacto | Recomendacion |
+| --- | --- | --- |
+| Memoria solo en RAM | Se pierde al reiniciar la app. | Persistir en base de datos mas adelante. |
+| Clasificacion LLM puede fallar | Una consulta podria caer en categoria incorrecta. | Agregar pruebas y fallback robusto. |
+| Sin streaming | La respuesta aparece completa al final. | Integrar streaming cuando el flujo este estable. |
+| Sin pruebas automatizadas | Cambios futuros pueden romper el grafo. | Crear tests para clasificacion, rutas y memoria. |
+
+## 12. Evolucion por versiones
+
+La evolucion por versiones documenta el camino del proyecto. Algunas historias de usuario son historicas y ya no forman parte del flujo activo, pero se conservan para entender las decisiones tecnicas tomadas durante el desarrollo.
+
+| Version | Enfoque | Estado |
+| --- | --- | --- |
+| HU-001 | Chat educativo inicial con seleccion de tono. | Historico |
+| HU-002 | Incorporacion de RAG diagnostico con PDF y ChromaDB. | Retirado del flujo actual |
+| HU-003 | Integracion de LangGraph para orquestar consultas. | Base arquitectonica vigente |
+| HU-004 | Aprendizaje guiado fijo, tono fijo y paleta visual. | Vigente |
+| HU-005 | Clasificacion LLM, memoria conversacional y restriccion fuera de dominio. | Vigente |
+
+La HU-02 queda documentada como antecedente tecnico, aunque el codigo actual ya no conserva el flujo de diagnostico/RAG. La HU-03 continua vigente porque LangGraph sigue siendo el mecanismo principal de orquestacion.
+>>>>>>> HU-005-fase-5-QA

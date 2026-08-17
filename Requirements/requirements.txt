@@ -3,6 +3,7 @@ streamlit
 
 # LangChain, LangGraph y conectores
 langchain
+<<<<<<< HEAD
 langchain-community
 langchain-core
 langchain-openai
@@ -18,3 +19,12 @@ tiktoken
 
 # Lectura del PDF diagnostico usado por PyPDFLoader
 pypdf
+=======
+langchain-core
+langchain-openai
+langgraph
+
+# Modelos y tokenizacion de OpenAI
+openai
+tiktoken
+>>>>>>> HU-005-fase-5-QA
