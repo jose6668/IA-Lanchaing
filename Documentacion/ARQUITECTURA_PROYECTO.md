@@ -2,7 +2,7 @@
 
 ## 1. Descripcion general
 
-El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual se centra en tres capacidades: clasificar consultas con un LLM, enrutar el flujo con LangGraph y mantener memoria temporal por sesion.
+El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual se centra en cuatro capacidades: clasificar consultas con un LLM, enrutar el flujo con LangGraph, mantener memoria persistente por sesion y limitar el historial conversacional a 20 mensajes.
 
 El asistente ya no usa recuperacion documental, PDF, embeddings ni base vectorial. Su dominio queda limitado a programacion, revision de codigo e historial conversacional relacionado con el aprendizaje.
 
@@ -16,7 +16,8 @@ Responsabilidades implementadas:
 - Clasificar consultas mediante un LLM.
 - Enrutar la conversacion mediante LangGraph.
 - Generar respuestas pedagogicas con OpenAI.
-- Mantener memoria conversacional temporal mediante `RunnableWithMessageHistory`.
+- Mantener memoria conversacional persistente mediante SQLite y `RunnableWithMessageHistory`.
+- Limitar cada historial de sesion a 20 mensajes.
 - Restringir preguntas fuera del dominio de programacion.
 - Reiniciar la memoria cuando el usuario limpia el chat.
 
@@ -38,8 +39,9 @@ Fuera del alcance actual:
 | Clasificar con LLM | Evita depender de palabras clave fragiles o errores ortograficos exactos. |
 | Usar una sola categoria por consulta | Mantiene el grafo simple para la etapa actual del aprendizaje. |
 | Priorizar `revision_codigo` | Si el usuario pega codigo, el flujo mas util es revisar el codigo antes que explicar teoria general. |
-| Usar memoria temporal en memoria RAM | Permite practicar `session_id` sin introducir base de datos todavia. |
-| Reiniciar memoria con nuevo `session_id` | Limpiar el chat debe iniciar una conversacion nueva. |
+| Usar memoria persistente local | Permite conservar contexto reciente aunque la aplicacion se reinicie. |
+| Limitar memoria a 20 mensajes | Evita crecimiento indefinido del historial y controla el contexto enviado al modelo. |
+| Reiniciar memoria visible con nuevo `session_id` | Limpiar el chat debe iniciar una conversacion nueva. |
 
 ## 4. Componentes principales
 
@@ -48,6 +50,7 @@ Fuera del alcance actual:
 | Interfaz Streamlit | `app.py` | Renderiza pagina, chat, sidebar, temas sugeridos y estado visual. |
 | Adaptador del asistente | `UI/asistente.py` | Inicializa el grafo cacheado y procesa consultas desde Streamlit. |
 | Grafo educativo | `Graphs/learning_graph.py` | Clasifica, enruta y genera respuestas por nodos. |
+| Memoria conversacional | `Services/conversation_memory.py` | Guarda y recupera historial por `session_id` con limite de 20 mensajes. |
 | Configuracion | `Models/config.py` | Define modelo, temperatura y ruta base. |
 | Prompt | `Prompts/prompt.py` | Define reglas pedagogicas y comportamiento por tipo de consulta. |
 | Dependencias | `Requirements/requirements.txt` | Lista dependencias necesarias del proyecto. |
@@ -62,7 +65,7 @@ flowchart LR
     UI --> GRAPH[LearningAssistantGraph]
     GRAPH --> CLASSIFIER[Clasificador LLM]
     GRAPH --> MEMORY[RunnableWithMessageHistory]
-    MEMORY --> STORE[InMemoryChatMessageHistory por session_id]
+    MEMORY --> STORE[SQLite por session_id maximo 20 mensajes]
     GRAPH --> OPENAI[ChatOpenAI]
     OPENAI --> UI
     UI --> APP
@@ -130,8 +133,9 @@ revision_codigo > historial > programacion > restriccion
 La memoria se implementa con:
 
 - `RunnableWithMessageHistory`
-- `InMemoryChatMessageHistory`
+- `SQLiteLimitedChatMessageHistory`
 - `session_id` generado desde `app.py`
+- `conversation_memory.sqlite`
 
 El prompt se construye como mensajes:
 
@@ -140,6 +144,8 @@ El prompt se construye como mensajes:
 3. Mensaje humano con la nueva pregunta.
 
 Esta decision evita convertir el historial en texto plano y permite que LangChain gestione mensajes de usuario/asistente correctamente.
+
+Cada sesion conserva como maximo 20 mensajes. Cuando se supera ese limite, se eliminan los mensajes mas antiguos y se conservan los mas recientes. El `session_id` tambien se mantiene en los query params de Streamlit para poder recuperar una conversacion si se conserva la misma URL. Si la app inicia sin `session_id` en la URL, intenta recuperar el ultimo `session_id` persistido antes de crear uno nuevo.
 
 ## 10. Arquitectura visual
 
@@ -158,7 +164,7 @@ La interfaz mantiene una paleta visual aplicada desde `app.py` mediante CSS inye
 
 | Riesgo | Impacto | Recomendacion |
 | --- | --- | --- |
-| Memoria solo en RAM | Se pierde al reiniciar la app. | Persistir en base de datos mas adelante. |
+| Memoria limitada a 20 mensajes | Informacion antigua puede salir de la ventana de contexto. | Evaluar resumen o memoria vectorial en una HU futura. |
 | Clasificacion LLM puede fallar | Una consulta podria caer en categoria incorrecta. | Agregar pruebas y fallback robusto. |
 | Sin streaming | La respuesta aparece completa al final. | Integrar streaming cuando el flujo este estable. |
 | Sin pruebas automatizadas | Cambios futuros pueden romper el grafo. | Crear tests para clasificacion, rutas y memoria. |
@@ -174,5 +180,6 @@ La evolucion por versiones documenta el camino del proyecto. Algunas historias d
 | HU-003 | Integracion de LangGraph para orquestar consultas. | Base arquitectonica vigente |
 | HU-004 | Aprendizaje guiado fijo, tono fijo y paleta visual. | Vigente |
 | HU-005 | Clasificacion LLM, memoria conversacional y restriccion fuera de dominio. | Vigente |
+| HU-006 | Memoria persistente por sesion con limite de 20 mensajes. | Vigente |
 
 La HU-02 queda documentada como antecedente tecnico, aunque el codigo actual ya no conserva el flujo de diagnostico/RAG. La HU-03 continua vigente porque LangGraph sigue siendo el mecanismo principal de orquestacion.
