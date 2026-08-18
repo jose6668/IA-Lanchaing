@@ -1,7 +1,12 @@
 import streamlit as st
 from uuid import uuid4
 
-from UI.asistente import ask_assistant
+from UI.asistente import (
+    ask_assistant,
+    clear_conversation,
+    get_last_conversation_session_id,
+    get_recent_conversation,
+)
 
 st.set_page_config(
     page_title="Asistente de Programación",
@@ -19,19 +24,12 @@ st.markdown(
             --color-azul-oscuro: #155F82;
             --color-superficie: #F7FBFA;
             --color-texto: #173642;
-<<<<<<< HEAD
-        }
-
-        .stApp {
-            background: var(--color-superficie);
-=======
             --color-borde: rgba(149, 209, 220, 0.75);
         }
 
         .stApp {
             background:
                 linear-gradient(180deg, #E7F0EA 0%, #F7FBFA 34%, #FFFFFF 100%);
->>>>>>> HU-005-fase-5-QA
             color: var(--color-texto);
         }
 
@@ -58,8 +56,6 @@ st.markdown(
             color: var(--color-azul);
         }
 
-<<<<<<< HEAD
-=======
         p, li, label, span, div {
             color: var(--color-texto);
         }
@@ -70,7 +66,6 @@ st.markdown(
             line-height: 1.7;
         }
 
->>>>>>> HU-005-fase-5-QA
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
             border-right: 4px solid var(--color-celeste);
@@ -83,8 +78,6 @@ st.markdown(
             color: var(--color-azul);
         }
 
-<<<<<<< HEAD
-=======
         .sidebar-guide {
             background: rgba(255, 255, 255, 0.72);
             border: 1px solid var(--color-borde);
@@ -99,7 +92,6 @@ st.markdown(
             color: var(--color-azul);
         }
 
->>>>>>> HU-005-fase-5-QA
         .stButton > button {
             background-color: var(--color-azul);
             border: 1px solid var(--color-azul);
@@ -114,21 +106,11 @@ st.markdown(
         }
 
         [data-testid="stAlert"] {
-<<<<<<< HEAD
-=======
             background-color: rgba(149, 209, 220, 0.28);
->>>>>>> HU-005-fase-5-QA
             border-radius: 8px;
             border-left: 5px solid var(--color-celeste);
         }
 
-<<<<<<< HEAD
-        [data-testid="stChatMessage"] {
-            background-color: rgba(231, 240, 234, 0.52);
-            border-left: 5px solid var(--color-celeste);
-            border-radius: 8px;
-            padding: 0.5rem;
-=======
         [data-testid="stAlert"] *,
         [data-testid="stAlert"] p,
         [data-testid="stAlert"] li {
@@ -147,7 +129,6 @@ st.markdown(
         [data-testid="stChatMessage"] li,
         [data-testid="stChatMessage"] code {
             color: var(--color-texto) !important;
->>>>>>> HU-005-fase-5-QA
         }
 
         [data-testid="stChatMessage"]:has(
@@ -163,21 +144,13 @@ st.markdown(
         }
 
         [data-testid="stChatInput"] > div {
-<<<<<<< HEAD
-            background-color: var(--color-superficie) !important;
-=======
             background-color: #FFFFFF !important;
->>>>>>> HU-005-fase-5-QA
             border: 2px solid var(--color-celeste) !important;
             box-shadow: none !important;
         }
 
         [data-testid="stChatInput"] textarea {
-<<<<<<< HEAD
-            background-color: var(--color-superficie) !important;
-=======
             background-color: #FFFFFF !important;
->>>>>>> HU-005-fase-5-QA
             color: var(--color-texto) !important;
         }
 
@@ -198,43 +171,23 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-<<<<<<< HEAD
-DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
-DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
-
-
-def diagnostic_is_configured() -> bool:
-    """Comprueba que exista el índice vectorial."""
-
-    return DIAGNOSTIC_CHROMA_PATH.exists()
-
-
-def configure_diagnostic() -> bool:
-    """Procesa el PDF y reconstruye ChromaDB."""
-
-    try:
-        processor = (
-            DiagnosticDocumentProcessor()
-        )
-
-        vectorstore = processor.setup()
-
-        return vectorstore is not None
-
-    except Exception as error:
-        st.error(
-            "No fue posible configurar "
-            f"el diagnóstico: {error}"
-        )
-
-        return False
-=======
 if "session_id" not in st.session_state:
-    st.session_state.session_id = f"streamlit-{uuid4().hex}"
->>>>>>> HU-005-fase-5-QA
+    query_session_id = st.query_params.get("session_id")
+    if query_session_id:
+        st.session_state.session_id = query_session_id
+    else:
+        last_session_id = get_last_conversation_session_id()
+        st.session_state.session_id = (
+            last_session_id
+            if last_session_id
+            else f"streamlit-{uuid4().hex}"
+        )
+    st.query_params["session_id"] = st.session_state.session_id
+
+if "messages" not in st.session_state:
+    st.session_state.messages = get_recent_conversation(
+        st.session_state.session_id
+    )
 
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
@@ -253,61 +206,6 @@ st.divider()
 
 
 with st.sidebar:
-<<<<<<< HEAD
-    st.header("📋 Información del sistema")
-
-    assistant_info = get_assistant_info()
-
-    st.markdown("**🤖 Tipo de asistente:**")
-    st.info(assistant_info["tipo"])
-    st.divider()
-
-
-    st.subheader("📄 Diagnóstico educativo")
-
-    if DIAGNOSTIC_PDF_PATH.exists():
-        st.success("PDF encontrado")
-    else:
-        st.error(
-            "No se encontró el PDF dentro "
-            "de la carpeta docs."
-        )
-
-    if diagnostic_is_configured():
-        st.success("Base vectorial configurada")
-    else:
-        st.warning(
-            "La base vectorial todavía "
-            "no está configurada."
-        )
-
-    if st.button(
-        "🔄 Procesar o reconstruir diagnóstico",
-        use_container_width=True,
-        key="configure_diagnostic_button",
-    ):
-        with st.spinner(
-            "Procesando el documento..."
-        ):
-            if configure_diagnostic():
-                st.success(
-                    "Diagnóstico procesado correctamente."
-                )
-
-                # Elimina los recursos que conservaban el RAG anterior.
-                st.cache_resource.clear()
-
-                st.rerun()
-
-    st.divider()
-
-    st.markdown("**🎓 Modo de aprendizaje:**")
-
-    st.info(
-        "Aprendizaje guiado: el asistente orienta paso a paso "
-        "con preguntas y pistas, sin entregar la solución completa "
-        "de inmediato."
-=======
     st.header("Guía de uso")
 
     st.markdown(
@@ -320,7 +218,6 @@ with st.sidebar:
         </div>
         """,
         unsafe_allow_html=True,
->>>>>>> HU-005-fase-5-QA
     )
 
     st.divider()
@@ -331,8 +228,10 @@ with st.sidebar:
         use_container_width=True,
         key="clear_chat_button",
     ):
+        clear_conversation(st.session_state.session_id)
         st.session_state.messages = []
         st.session_state.session_id = f"streamlit-{uuid4().hex}"
+        st.query_params["session_id"] = st.session_state.session_id
         st.rerun()
 
 
@@ -402,10 +301,7 @@ if user_input:
                 question=user_input,
                 tono=DEFAULT_ASSISTANT_TONE,
                 modo_aprendizaje=DEFAULT_LEARNING_MODE,
-<<<<<<< HEAD
-=======
                 session_id=st.session_state.session_id,
->>>>>>> HU-005-fase-5-QA
             )
         )
 
@@ -425,16 +321,9 @@ st.divider()
 st.markdown(
     """
     <div class="palette-footer" style="text-align: center;">
-<<<<<<< HEAD
-        💻 Asistente educativo con RAG diagnóstico
-=======
         💻 Asistente educativo de programación
->>>>>>> HU-005-fase-5-QA
     </div>
     """,
     unsafe_allow_html=True,
 )
-<<<<<<< HEAD
-=======
 
->>>>>>> HU-005-fase-5-QA
