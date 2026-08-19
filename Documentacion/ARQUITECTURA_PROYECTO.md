@@ -2,7 +2,7 @@
 
 ## 1. Descripcion general
 
-El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual se centra en cuatro capacidades: clasificar consultas con un LLM, enrutar el flujo con LangGraph, mantener memoria persistente por sesion y limitar el historial conversacional a 20 mensajes.
+El proyecto es una aplicacion web local construida con Streamlit que funciona como asistente educativo para aprender programacion. La version actual se centra en cinco capacidades: clasificar consultas con un LLM, enrutar el flujo con LangGraph, registrar usuarios locales, manejar multiples chats por usuario y mantener memoria persistente limitada a 20 mensajes por conversacion.
 
 El asistente ya no usa recuperacion documental, PDF, embeddings ni base vectorial. Su dominio queda limitado a programacion, revision de codigo e historial conversacional relacionado con el aprendizaje.
 
@@ -18,6 +18,9 @@ Responsabilidades implementadas:
 - Generar respuestas pedagogicas con OpenAI.
 - Mantener memoria conversacional persistente mediante SQLite y `RunnableWithMessageHistory`.
 - Limitar cada historial de sesion a 20 mensajes.
+- Crear usuarios locales con nombre, username y password.
+- Iniciar sesion con credenciales locales.
+- Mantener multiples chats separados por usuario.
 - Restringir preguntas fuera del dominio de programacion.
 - Reiniciar la memoria cuando el usuario limpia el chat.
 
@@ -41,7 +44,8 @@ Fuera del alcance actual:
 | Priorizar `revision_codigo` | Si el usuario pega codigo, el flujo mas util es revisar el codigo antes que explicar teoria general. |
 | Usar memoria persistente local | Permite conservar contexto reciente aunque la aplicacion se reinicie. |
 | Limitar memoria a 20 mensajes | Evita crecimiento indefinido del historial y controla el contexto enviado al modelo. |
-| Reiniciar memoria visible con nuevo `session_id` | Limpiar el chat debe iniciar una conversacion nueva. |
+| Construir `session_id` con usuario y chat | Evita mezclar historiales entre usuarios o conversaciones. |
+| Gestion local de usuarios | Permite practicar separacion multiusuario sin autenticacion productiva. |
 
 ## 4. Componentes principales
 
@@ -51,6 +55,8 @@ Fuera del alcance actual:
 | Adaptador del asistente | `UI/asistente.py` | Inicializa el grafo cacheado y procesa consultas desde Streamlit. |
 | Grafo educativo | `Graphs/learning_graph.py` | Clasifica, enruta y genera respuestas por nodos. |
 | Memoria conversacional | `Services/conversation_memory.py` | Guarda y recupera historial por `session_id` con limite de 20 mensajes. |
+| Gestion de usuarios | `Services/user_manager.py` | Crea usuarios locales y valida inicio de sesion. |
+| Gestion de chats | `Services/chat_manager.py` | Crea, lista, selecciona y elimina chats por usuario. |
 | Configuracion | `Models/config.py` | Define modelo, temperatura y ruta base. |
 | Prompt | `Prompts/prompt.py` | Define reglas pedagogicas y comportamiento por tipo de consulta. |
 | Dependencias | `Requirements/requirements.txt` | Lista dependencias necesarias del proyecto. |
@@ -61,6 +67,8 @@ Fuera del alcance actual:
 flowchart LR
     USER[Usuario] --> APP[app.py]
     APP --> STATE[st.session_state]
+    APP --> USERS[Services/user_manager.py]
+    APP --> CHATS[Services/chat_manager.py]
     APP --> UI[UI/asistente.py]
     UI --> GRAPH[LearningAssistantGraph]
     GRAPH --> CLASSIFIER[Clasificador LLM]
@@ -145,7 +153,7 @@ El prompt se construye como mensajes:
 
 Esta decision evita convertir el historial en texto plano y permite que LangChain gestione mensajes de usuario/asistente correctamente.
 
-Cada sesion conserva como maximo 20 mensajes. Cuando se supera ese limite, se eliminan los mensajes mas antiguos y se conservan los mas recientes. El `session_id` tambien se mantiene en los query params de Streamlit para poder recuperar una conversacion si se conserva la misma URL. Si la app inicia sin `session_id` en la URL, intenta recuperar el ultimo `session_id` persistido antes de crear uno nuevo.
+Cada chat conserva como maximo 20 mensajes. Cuando se supera ese limite, se eliminan los mensajes mas antiguos y se conservan los mas recientes. Desde HU-07, el `session_id` se construye con el usuario y el chat activo usando el formato `user_{username}_chat_{chat_id}`.
 
 ## 10. Arquitectura visual
 
@@ -181,5 +189,6 @@ La evolucion por versiones documenta el camino del proyecto. Algunas historias d
 | HU-004 | Aprendizaje guiado fijo, tono fijo y paleta visual. | Vigente |
 | HU-005 | Clasificacion LLM, memoria conversacional y restriccion fuera de dominio. | Vigente |
 | HU-006 | Memoria persistente por sesion con limite de 20 mensajes. | Vigente |
+| HU-007 | Multiusuario y multiples chats con registro local. | Vigente |
 
 La HU-02 queda documentada como antecedente tecnico, aunque el codigo actual ya no conserva el flujo de diagnostico/RAG. La HU-03 continua vigente porque LangGraph sigue siendo el mecanismo principal de orquestacion.

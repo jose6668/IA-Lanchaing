@@ -1,10 +1,11 @@
 import streamlit as st
-from uuid import uuid4
 
+from Models.config import MEMORY_DB_PATH
+from Services.chat_manager import ChatManager
+from Services.user_manager import UserManager
 from UI.asistente import (
     ask_assistant,
     clear_conversation,
-    get_last_conversation_session_id,
     get_recent_conversation,
 )
 
@@ -171,68 +172,262 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if "session_id" not in st.session_state:
-    query_session_id = st.query_params.get("session_id")
-    if query_session_id:
-        st.session_state.session_id = query_session_id
-    else:
-        last_session_id = get_last_conversation_session_id()
-        st.session_state.session_id = (
-            last_session_id
-            if last_session_id
-            else f"streamlit-{uuid4().hex}"
-        )
-    st.query_params["session_id"] = st.session_state.session_id
-
-if "messages" not in st.session_state:
-    st.session_state.messages = get_recent_conversation(
-        st.session_state.session_id
-    )
-
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
 
 
-st.title(
-    "💻 Asistente para Aprender Programación"
-)
-
-st.caption(
-    "Tutor educativo guiado para aprender programación paso a paso"
-)
-
-st.divider()
+@st.cache_resource
+def get_user_manager() -> UserManager:
+    return UserManager(MEMORY_DB_PATH)
 
 
+@st.cache_resource
+def get_chat_manager() -> ChatManager:
+    return ChatManager(MEMORY_DB_PATH)
 
-with st.sidebar:
-    st.header("Guía de uso")
 
-    st.markdown(
-        """
-        <div class="sidebar-guide">
-            <strong>Este asistente te ayuda a aprender programación.</strong>
-            Escribe una pregunta, comparte una duda o pega un fragmento de
-            código. Recibirás orientación paso a paso, con pistas y preguntas
-            para que puedas construir la solución por tu cuenta.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+user_manager = get_user_manager()
+chat_manager = get_chat_manager()
 
+
+def init_session_state() -> None:
+    defaults = {
+        "current_user": None,
+        "current_chat_id": None,
+        "messages": [],
+        "session_id": None,
+    }
+
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+
+
+def build_session_id() -> str | None:
+    user = st.session_state.current_user
+    chat_id = st.session_state.current_chat_id
+
+    if not user or not chat_id:
+        return None
+
+    return chat_manager.build_session_id(user["username"], chat_id)
+
+
+def load_current_chat_messages() -> None:
+    session_id = build_session_id()
+
+    if not session_id:
+        st.session_state.messages = []
+        st.session_state.session_id = None
+        return
+
+    st.session_state.session_id = session_id
+    st.query_params["session_id"] = session_id
+    st.session_state.messages = get_recent_conversation(session_id)
+
+
+def set_current_chat(chat_id: str) -> None:
+    st.session_state.current_chat_id = chat_id
+    load_current_chat_messages()
+
+
+def logout() -> None:
+    st.session_state.current_user = None
+    st.session_state.current_chat_id = None
+    st.session_state.messages = []
+    st.session_state.session_id = None
+    st.query_params.clear()
+
+
+def render_auth_screen() -> None:
+    st.title("💻 Asistente para Aprender Programación")
+    st.caption("Inicia sesión o crea un usuario para comenzar.")
     st.divider()
 
-    if st.button(
-        "🗑️ Limpiar chat",
-        type="secondary",
-        use_container_width=True,
-        key="clear_chat_button",
-    ):
-        clear_conversation(st.session_state.session_id)
-        st.session_state.messages = []
-        st.session_state.session_id = f"streamlit-{uuid4().hex}"
-        st.query_params["session_id"] = st.session_state.session_id
-        st.rerun()
+    login_tab, register_tab = st.tabs(["Iniciar sesión", "Crear usuario"])
+
+    with login_tab:
+        with st.form("login_form"):
+            username = st.text_input("Nombre de usuario")
+            password = st.text_input("Contraseña", type="password")
+            submitted = st.form_submit_button("Iniciar sesión")
+
+        if submitted:
+            success, user, message = user_manager.authenticate(
+                username=username,
+                password=password,
+            )
+
+            if success and user:
+                st.session_state.current_user = user
+                st.session_state.current_chat_id = None
+                st.session_state.messages = []
+                st.session_state.session_id = None
+                st.success(message)
+                st.rerun()
+
+            st.error(message)
+
+    with register_tab:
+        with st.form("register_form"):
+            name = st.text_input("Nombre")
+            username = st.text_input("Nombre de usuario")
+            password = st.text_input("Contraseña", type="password")
+            confirm_password = st.text_input(
+                "Confirmar contraseña",
+                type="password",
+            )
+            submitted = st.form_submit_button("Crear usuario")
+
+        if submitted:
+            if password != confirm_password:
+                st.error("La confirmación de contraseña no coincide.")
+                return
+
+            success, message = user_manager.create_user(
+                name=name,
+                username=username,
+                password=password,
+            )
+
+            if success:
+                auth_success, user, _ = user_manager.authenticate(
+                    username=username,
+                    password=password,
+                )
+                if auth_success and user:
+                    st.session_state.current_user = user
+                    st.session_state.current_chat_id = None
+                    st.session_state.messages = []
+                    st.session_state.session_id = None
+                    st.success(message)
+                    st.rerun()
+
+            st.error(message)
+
+
+def render_sidebar() -> None:
+    user = st.session_state.current_user
+
+    with st.sidebar:
+        st.header("Guía de uso")
+
+        st.markdown(
+            """
+            <div class="sidebar-guide">
+                <strong>Este asistente te ayuda a aprender programación.</strong>
+                Escribe una pregunta, comparte una duda o pega un fragmento de
+                código. Recibirás orientación paso a paso, con pistas y preguntas
+                para que puedas construir la solución por tu cuenta.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.divider()
+        st.subheader("Chats")
+
+        if st.button(
+            "Nuevo chat",
+            type="primary",
+            use_container_width=True,
+            key="new_chat_button",
+        ):
+            new_chat = chat_manager.create_chat(user["username"])
+            set_current_chat(new_chat["chat_id"])
+            st.rerun()
+
+        chats = chat_manager.list_chats(user["username"])
+
+        if chats:
+            for chat in chats:
+                is_active = chat["chat_id"] == st.session_state.current_chat_id
+                label = chat["title"]
+
+                if st.button(
+                    label,
+                    type="secondary" if is_active else "secondary",
+                    use_container_width=True,
+                    key=f"chat_{chat['chat_id']}",
+                ):
+                    set_current_chat(chat["chat_id"])
+                    st.rerun()
+
+                if is_active and st.button(
+                    "Eliminar chat actual",
+                    use_container_width=True,
+                    key=f"delete_{chat['chat_id']}",
+                ):
+                    session_id = build_session_id()
+                    if session_id:
+                        clear_conversation(session_id)
+                    chat_manager.delete_chat(user["username"], chat["chat_id"])
+                    st.session_state.current_chat_id = None
+                    st.session_state.messages = []
+                    st.session_state.session_id = None
+                    st.query_params.clear()
+                    st.rerun()
+        else:
+            st.info("Crea un chat para comenzar.")
+
+        st.divider()
+
+        if st.session_state.current_chat_id and st.button(
+            "🗑️ Limpiar chat",
+            type="secondary",
+            use_container_width=True,
+            key="clear_chat_button",
+        ):
+            session_id = build_session_id()
+            if session_id:
+                clear_conversation(session_id)
+            st.session_state.messages = []
+            st.rerun()
+
+        if st.button(
+            "Cerrar sesión",
+            use_container_width=True,
+            key="logout_button",
+        ):
+            logout()
+            st.rerun()
+
+
+def render_user_header() -> None:
+    user = st.session_state.current_user
+    left, right = st.columns([3, 1])
+
+    with left:
+        st.title("💻 Asistente para Aprender Programación")
+        st.caption("Tutor educativo guiado para aprender programación paso a paso")
+
+    with right:
+        st.markdown(
+            f"""
+            <div style="text-align: right; font-weight: 700; color: #1A77A3;">
+                {user["name"]}<br>
+                <span style="font-weight: 500;">@{user["username"]}</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+init_session_state()
+
+
+if not st.session_state.current_user:
+    render_auth_screen()
+    st.stop()
+
+
+render_sidebar()
+render_user_header()
+st.divider()
+
+if not st.session_state.current_chat_id:
+    st.info("Crea o selecciona un chat en la barra lateral para comenzar.")
+    st.stop()
 
 
 chat_column, topics_column = st.columns(
@@ -286,6 +481,9 @@ user_input = st.chat_input(
 )
 
 if user_input:
+    if not st.session_state.session_id:
+        load_current_chat_messages()
+
     st.session_state.messages.append(
         {
             "role": "user",
@@ -310,6 +508,11 @@ if user_input:
             "role": "assistant",
             "content": response,
         }
+    )
+    chat_manager.touch_chat(
+        st.session_state.current_user["username"],
+        st.session_state.current_chat_id,
+        first_message=user_input,
     )
 
     st.rerun()
