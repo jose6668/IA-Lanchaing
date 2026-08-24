@@ -159,6 +159,21 @@ st.markdown(
             color: var(--color-azul) !important;
         }
 
+        [data-testid="stTextInput"] input {
+            background-color: #FFFFFF !important;
+            color: var(--color-texto) !important;
+            border: 1px solid var(--color-borde) !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stTextInput"] input::placeholder {
+            color: rgba(23, 54, 66, 0.58) !important;
+        }
+
+        [data-testid="stTextInput"] button {
+            color: var(--color-azul) !important;
+        }
+
         hr {
             border-color: rgba(26, 119, 163, 0.22);
         }
@@ -196,6 +211,7 @@ def init_session_state() -> None:
         "current_chat_id": None,
         "messages": [],
         "session_id": None,
+        "auth_mode": "Iniciar sesión",
     }
 
     for key, value in defaults.items():
@@ -244,58 +260,38 @@ def render_auth_screen() -> None:
     st.caption("Inicia sesión o crea un usuario para comenzar.")
     st.divider()
 
-    login_tab, register_tab = st.tabs(["Iniciar sesión", "Crear usuario"])
+    st.session_state.auth_mode = st.radio(
+        "Acceso",
+        ["Iniciar sesión", "Crear usuario"],
+        key="auth_mode_selector",
+        horizontal=True,
+        index=0 if st.session_state.auth_mode == "Iniciar sesión" else 1,
+        label_visibility="collapsed",
+    )
 
-    with login_tab:
+    if st.session_state.auth_mode == "Iniciar sesión":
+        st.subheader("Iniciar sesión")
+
         with st.form("login_form"):
-            username = st.text_input("Nombre de usuario")
-            password = st.text_input("Contraseña", type="password")
-            submitted = st.form_submit_button("Iniciar sesión")
-
-        if submitted:
-            success, user, message = user_manager.authenticate(
-                username=username,
-                password=password,
+            username = st.text_input(
+                "Nombre de usuario",
+                placeholder="Ingresa tu usuario",
+                key="login_username",
             )
-
-            if success and user:
-                st.session_state.current_user = user
-                st.session_state.current_chat_id = None
-                st.session_state.messages = []
-                st.session_state.session_id = None
-                st.success(message)
-                st.rerun()
-
-            st.error(message)
-
-    with register_tab:
-        with st.form("register_form"):
-            name = st.text_input("Nombre")
-            username = st.text_input("Nombre de usuario")
-            password = st.text_input("Contraseña", type="password")
-            confirm_password = st.text_input(
-                "Confirmar contraseña",
+            password = st.text_input(
+                "Contraseña",
                 type="password",
+                key="login_password",
             )
-            submitted = st.form_submit_button("Crear usuario")
+            login_submitted = st.form_submit_button("Iniciar sesión")
 
-        if submitted:
-            if password != confirm_password:
-                st.error("La confirmación de contraseña no coincide.")
-                return
-
-            success, message = user_manager.create_user(
-                name=name,
-                username=username,
-                password=password,
-            )
-
-            if success:
-                auth_success, user, _ = user_manager.authenticate(
+            if login_submitted:
+                success, user, message = user_manager.authenticate(
                     username=username,
                     password=password,
                 )
-                if auth_success and user:
+
+                if success and user:
                     st.session_state.current_user = user
                     st.session_state.current_chat_id = None
                     st.session_state.messages = []
@@ -303,7 +299,57 @@ def render_auth_screen() -> None:
                     st.success(message)
                     st.rerun()
 
-            st.error(message)
+                st.error(message)
+
+    if st.session_state.auth_mode == "Crear usuario":
+        st.subheader("Crear usuario")
+
+        with st.form("register_form"):
+            name = st.text_input(
+                "Nombre",
+                key="register_name",
+            )
+            username = st.text_input(
+                "Nombre de usuario",
+                key="register_username",
+            )
+            password = st.text_input(
+                "Contraseña",
+                type="password",
+                key="register_password",
+            )
+            confirm_password = st.text_input(
+                "Confirmar contraseña",
+                type="password",
+                key="register_confirm_password",
+            )
+            register_submitted = st.form_submit_button("Crear usuario")
+
+            if register_submitted:
+                if password != confirm_password:
+                    st.error("La confirmación de contraseña no coincide.")
+                    return
+
+                success, message = user_manager.create_user(
+                    name=name,
+                    username=username,
+                    password=password,
+                )
+
+                if success:
+                    auth_success, user, _ = user_manager.authenticate(
+                        username=username,
+                        password=password,
+                    )
+                    if auth_success and user:
+                        st.session_state.current_user = user
+                        st.session_state.current_chat_id = None
+                        st.session_state.messages = []
+                        st.session_state.session_id = None
+                        st.success(message)
+                        st.rerun()
+
+                st.error(message)
 
 
 def render_sidebar() -> None:
