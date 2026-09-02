@@ -8,7 +8,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
-from Models.classifier_prompt import CLASSIFIER_SYSTEM_PROMPT
+from Prompts.classifier_prompt import CLASSIFIER_SYSTEM_PROMPT
 from Models.config import MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE
 from Prompts.prompt import PROGRAMMING_TEMPLATE
 from Services.conversation_memory import SQLiteLimitedChatMessageHistory

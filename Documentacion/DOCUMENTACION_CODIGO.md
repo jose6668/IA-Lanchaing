@@ -2,7 +2,7 @@
 
 ## 1. Descripcion general
 
-El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, orquestacion mediante LangGraph, clasificacion de consultas con un LLM y memoria conversacional persistente por sesion.
+El proyecto implementa un asistente educativo de programacion con interfaz en Streamlit, orquestacion mediante LangGraph, clasificacion de consultas con un LLM, memoria conversacional persistente, usuarios locales y multiples chats por usuario.
 
 El objetivo pedagogico principal es el aprendizaje guiado. El asistente orienta al estudiante paso a paso, explica el razonamiento, ofrece pistas progresivas y evita entregar respuestas finales o codigo completo de inmediato.
 
@@ -78,11 +78,13 @@ Elementos relevantes:
 | CSS con `st.markdown()` | Aplica el estilo visual de la aplicacion. |
 | `st.session_state.messages` | Guarda el historial visible del chat. |
 | `st.session_state.session_id` | Identifica la memoria conversacional de la sesion. |
+| `st.session_state.current_user` | Guarda el usuario activo. |
+| `st.session_state.current_chat_id` | Guarda el chat activo del usuario. |
 | `st.query_params["session_id"]` | Conserva el identificador en la URL para recuperar la sesion. |
 | `DEFAULT_ASSISTANT_TONE` | Tono fijo enviado al grafo. |
 | `DEFAULT_LEARNING_MODE` | Modo pedagogico fijo enviado al grafo. |
 
-Si la aplicacion inicia sin `session_id` en la URL, intenta recuperar el ultimo `session_id` persistido antes de crear uno nuevo. Cuando el usuario limpia el chat, se elimina la memoria persistente de la sesion actual y luego se genera un nuevo `session_id`. Esto evita mezclar la nueva conversacion con el historial persistente anterior.
+En HU-07 el `session_id` se construye desde el usuario y el chat activo. Cuando el usuario limpia el chat, se elimina la memoria persistente del chat actual. Cuando cierra sesion, se limpia el estado visual sin eliminar usuarios ni chats guardados.
 
 ## 5. `UI/asistente.py`
 
@@ -189,7 +191,32 @@ Regla principal:
 Cada session_id conserva maximo 20 mensajes.
 ```
 
-## 8. `Prompts/prompt.py`
+## 8. `Services/user_manager.py`
+
+Responsabilidad: gestionar usuarios locales.
+
+| Elemento | Descripcion |
+| --- | --- |
+| `UserManager` | Crea usuarios, valida datos y autentica credenciales. |
+| `create_user()` | Guarda `name`, `username` y `password`. |
+| `authenticate()` | Valida `username` y `password`. |
+| `user_exists()` | Verifica usernames duplicados. |
+
+En esta version el password se guarda como texto plano por alcance academico. Debe reemplazarse por hash en una version futura.
+
+## 9. `Services/chat_manager.py`
+
+Responsabilidad: gestionar multiples chats por usuario.
+
+| Elemento | Descripcion |
+| --- | --- |
+| `ChatManager` | Crea, lista, busca, actualiza y elimina chats. |
+| `create_chat()` | Crea un chat asociado a un username. |
+| `list_chats()` | Lista chats del usuario activo. |
+| `touch_chat()` | Actualiza fecha, contador de mensajes y titulo inicial. |
+| `build_session_id()` | Construye `user_{username}_chat_{chat_id}`. |
+
+## 10. `Prompts/prompt.py`
 
 Responsabilidad: definir `PROGRAMMING_TEMPLATE`.
 
@@ -207,7 +234,7 @@ El prompt contiene:
 
 El historial no se inserta como texto dentro del template. Se inyecta como mensajes reales usando `MessagesPlaceholder` desde `Graphs/learning_graph.py`.
 
-## 9. `Models/config.py`
+## 11. `Models/config.py`
 
 Responsabilidad: centralizar configuracion basica.
 
@@ -219,7 +246,7 @@ Responsabilidad: centralizar configuracion basica.
 | `MEMORY_DB_PATH` | Ruta local de SQLite para memoria conversacional. |
 | `MAX_HISTORY_MESSAGES` | `20` |
 
-## 10. `Requirements/requirements.txt`
+## 12. `Requirements/requirements.txt`
 
 Dependencias principales:
 
@@ -233,7 +260,7 @@ Dependencias principales:
 | `openai` | Cliente OpenAI. |
 | `tiktoken` | Tokenizacion. |
 
-## 11. Comandos utiles
+## 13. Comandos utiles
 
 Ejecutar la aplicacion:
 
@@ -253,7 +280,7 @@ Buscar referencias eliminadas:
 rg "diagnost|RAG|Chroma|PDF|embedding|pypdf" app.py Graphs UI Models Prompts Requirements
 ```
 
-## 12. Estado actual del codigo
+## 14. Estado actual del codigo
 
 Implementado:
 
@@ -261,6 +288,8 @@ Implementado:
 - Clasificacion con LLM.
 - Memoria persistente por sesion.
 - Limite de 20 mensajes por sesion.
+- Registro e inicio de sesion local.
+- Multiples chats por usuario.
 - Restriccion fuera de dominio.
 - Eliminacion de dependencias de RAG.
 
