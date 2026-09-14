@@ -150,7 +150,10 @@ IA-Lanchaing/
 | --- | --- |
 | [Documentacion del codigo](./Documentacion/DOCUMENTACION_CODIGO.md) | Explica modulos, funciones y flujo tecnico actual. |
 | [Arquitectura del proyecto](./Documentacion/ARQUITECTURA_PROYECTO.md) | Describe componentes, diagramas, decisiones y riesgos. |
-| [HU-05 - Clasificacion LLM y memoria conversacional](./HU-docs/HU_05.md) | Historia de usuario de la version actual. |
+| [HU-08 - Rediseño visual e identidad del asistente](./HU-docs/HU_08.md) | Historia de usuario de la fase 8: acceso, panel, icono y diseño adaptable. |
+| [HU-07 - Multiusuario y multiples chats](./HU-docs/HU_07.md) | Registro local y conversaciones por usuario. |
+| [HU-06 - Memoria persistente](./HU-docs/HU_06.md) | Persistencia y límite del historial conversacional. |
+| [HU-05 - Clasificacion LLM y memoria conversacional](./HU-docs/HU_05.md) | Clasificación y memoria conversacional inicial. |
 | [HU-04 - Aprendizaje guiado y paleta visual](./HU-docs/HU_04.md) | Historia de usuario de la fase anterior. |
 | [HU-01 - Asistente educativo con seleccion de tono](./HU-docs/HU-001%20-%20Asistente%20educativo%20de%20programaci%C3%B3n%20con%20selecci%C3%B3n%20de%20tono.md) | Historia de usuario inicial. |
 
