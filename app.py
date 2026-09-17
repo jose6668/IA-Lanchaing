@@ -1,5 +1,6 @@
 import streamlit as st
 from html import escape
+from Services.attachments import ALLOWED_EXTENSIONS, AttachmentError, build_content
 from UI.theme import ICON_PATH, apply_theme, brand, icon_uri
 
 from Models.config import MEMORY_DB_PATH
@@ -216,20 +217,6 @@ def render_sidebar() -> None:
                     set_current_chat(chat["chat_id"])
                     st.rerun()
 
-                if is_active and st.button(
-                    "Eliminar chat actual",
-                    use_container_width=True,
-                    key=f"delete_{chat['chat_id']}",
-                ):
-                    session_id = build_session_id()
-                    if session_id:
-                        clear_conversation(session_id)
-                    chat_manager.delete_chat(user["username"], chat["chat_id"])
-                    st.session_state.current_chat_id = None
-                    st.session_state.messages = []
-                    st.session_state.session_id = None
-                    st.query_params.clear()
-                    st.rerun()
         else:
             st.info("Crea un chat para comenzar.")
 
@@ -245,6 +232,19 @@ def render_sidebar() -> None:
             if session_id:
                 clear_conversation(session_id)
             st.session_state.messages = []
+            st.rerun()
+
+        if st.session_state.current_chat_id and st.button(
+            "Eliminar chat actual", use_container_width=True, key="delete_chat_button",
+        ):
+            session_id = build_session_id()
+            if session_id:
+                clear_conversation(session_id)
+            chat_manager.delete_chat(user["username"], st.session_state.current_chat_id)
+            st.session_state.current_chat_id = None
+            st.session_state.messages = []
+            st.session_state.session_id = None
+            st.query_params.clear()
             st.rerun()
 
         st.markdown('<div class="sidebar-guide"><strong>💡 Guía de uso</strong><p>Pregunta, comparte código o pide ejemplos. Te acompañamos con pistas y explicaciones paso a paso.</p></div>', unsafe_allow_html=True)
@@ -305,13 +305,38 @@ if not st.session_state.messages:
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=str(ICON_PATH) if message["role"] == "assistant" else None):
-        st.markdown(message["content"])
+        content = message["content"]
+        if isinstance(content, str):
+            st.markdown(content)
+        else:
+            for block in content:
+                if block.get("type") == "image_url":
+                    st.image(block["image_url"]["url"], width=320)
+                elif block.get("type") == "text":
+                    if block["text"].startswith("Contenido del archivo adjunto"):
+                        with st.expander("Ver contenido del archivo adjunto"):
+                            st.text(block["text"])
+                    else:
+                        st.markdown(block["text"])
+
 
 st.markdown('<div class="palette-footer">Asistente de Programación · Aprende hoy, construye el mañana.</div>', unsafe_allow_html=True)
-user_input = st.chat_input("Escribe tu pregunta aquí…", key="main_chat_input")
-user_input = user_input or st.session_state.pop("pending_prompt", None)
-
-if user_input:
+st.caption("Adjunta PDF, Word (.docx), código UTF-8 o imágenes PNG/JPG/WebP/GIF estático. Máximo 4 archivos, 5 MB cada uno. El contenido se envía al tutor y se conserva en el historial del chat.")
+submission = st.chat_input(
+    "Escribe una pregunta o adjunta archivos…", key=f"main_chat_input_{st.session_state.current_user['username']}_{st.session_state.current_chat_id}",
+    accept_file="multiple", file_type=ALLOWED_EXTENSIONS, max_upload_size=5,
+)
+pending_prompt = st.session_state.pop("pending_prompt", None)
+if submission or pending_prompt:
+    text = submission if isinstance(submission, str) else (submission.text if submission else pending_prompt)
+    uploads = [] if isinstance(submission, str) or not submission else submission.files
+    try:
+        user_input = build_content(text or "", uploads)
+    except AttachmentError as error:
+        st.error(str(error))
+        st.stop()
+    if not user_input:
+        st.stop()
     if not st.session_state.current_chat_id:
         new_chat = chat_manager.create_chat(st.session_state.current_user["username"])
         set_current_chat(new_chat["chat_id"])
@@ -346,7 +371,7 @@ if user_input:
     chat_manager.touch_chat(
         st.session_state.current_user["username"],
         st.session_state.current_chat_id,
-        first_message=user_input,
+        first_message=text or "Consulta sobre archivos adjuntos",
     )
 
     st.rerun()

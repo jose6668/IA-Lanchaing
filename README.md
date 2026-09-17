@@ -148,6 +148,7 @@ IA-Lanchaing/
 
 | Documento | Descripcion |
 | --- | --- |
+| [HU-08.01 - Archivos e imágenes en el chat](./HU-docs/HU_08_01.md) | Adjuntos PDF, Word, código e imágenes y acciones de chat agrupadas. |
 | [Documentacion del codigo](./Documentacion/DOCUMENTACION_CODIGO.md) | Explica modulos, funciones y flujo tecnico actual. |
 | [Arquitectura del proyecto](./Documentacion/ARQUITECTURA_PROYECTO.md) | Describe componentes, diagramas, decisiones y riesgos. |
 | [HU-08 - Rediseño visual e identidad del asistente](./HU-docs/HU_08.md) | Historia de usuario de la fase 8: acceso, panel, icono y diseño adaptable. |

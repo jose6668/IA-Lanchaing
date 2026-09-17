@@ -31,14 +31,14 @@ def initialize_system():
 
 
 def ask_assistant(
-    question: str,
+    question: str | list[dict],
     tono: str,
     modo_aprendizaje: str,
     session_id: str,
 ) -> tuple[str, list[dict]]:
     """Procesa una pregunta utilizando LangGraph."""
 
-    clean_question = question.strip()
+    clean_question = question.strip() if isinstance(question, str) else question
 
     if not clean_question:
         return (
@@ -97,7 +97,7 @@ def get_assistant_info() -> dict:
     }
 
 
-def get_recent_conversation(session_id: str) -> list[dict[str, str]]:
+def get_recent_conversation(session_id: str) -> list[dict]:
     """Recupera mensajes recientes persistidos para reconstruir la UI."""
 
     return get_recent_messages_for_ui(

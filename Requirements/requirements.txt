@@ -1,5 +1,5 @@
 # Dependencias principales del asistente educativo
-streamlit
+streamlit>=1.63,<2
 
 # LangChain, LangGraph y conectores
 langchain
@@ -10,3 +10,8 @@ langgraph
 # Modelos y tokenizacion de OpenAI
 openai
 tiktoken
+
+# Lectura de adjuntos
+pypdf>=5,<7
+python-docx>=1.1,<2
+Pillow>=10,<13

@@ -123,7 +123,7 @@ def get_recent_messages_for_ui(
     session_id: str,
     db_path: Path,
     max_messages: int,
-) -> list[dict[str, str]]:
+) -> list[dict]:
     history = SQLiteLimitedChatMessageHistory(
         session_id=session_id,
         db_path=db_path,
@@ -143,7 +143,7 @@ def get_recent_messages_for_ui(
         ui_messages.append(
             {
                 "role": role,
-                "content": str(message.content),
+                "content": message.content,
             }
         )
 
