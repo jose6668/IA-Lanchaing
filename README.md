@@ -148,6 +148,8 @@ IA-Lanchaing/
 
 | Documento | Descripcion |
 | --- | --- |
+| [Preparación de producción](./Documentacion/PREPARACION_PRODUCCION.md) | Configuración privada, dependencias fijadas, almacenamiento y arranque. |
+| [HU-08.01 - Archivos e imágenes en el chat](./HU-docs/HU_08_01.md) | Adjuntos PDF, Word, código e imágenes y acciones de chat agrupadas. |
 | [Documentacion del codigo](./Documentacion/DOCUMENTACION_CODIGO.md) | Explica modulos, funciones y flujo tecnico actual. |
 | [Arquitectura del proyecto](./Documentacion/ARQUITECTURA_PROYECTO.md) | Describe componentes, diagramas, decisiones y riesgos. |
 | [HU-08 - Rediseño visual e identidad del asistente](./HU-docs/HU_08.md) | Historia de usuario de la fase 8: acceso, panel, icono y diseño adaptable. |
@@ -176,17 +178,29 @@ Modelo configurado:
 
 ## Ejecucion del proyecto
 
-Instalar dependencias:
+Usar Python 3.12 e instalar las dependencias fijadas:
 
 ```bash
-pip install -r Requirements/requirements.txt
+python3.12 -m venv venv
+venv/bin/python -m pip install -r Requirements/requirements.lock.txt
+cp .env.example .env
+chmod 600 .env
 ```
 
-Ejecutar la aplicacion:
+Configurar `OPENAI_API_KEY` en el archivo privado `.env`. No añadirlo a Git.
+Comprobar la configuración y ejecutar la aplicación:
 
 ```bash
-streamlit run app.py
+venv/bin/python scripts/check_config.py
+venv/bin/python scripts/run_app.py
 ```
+
+Abrir `http://localhost:8501`. La app escucha solo en la interfaz local y requiere
+reiniciarse después de cambiar archivos o configuración. Para producción, definir
+`APP_ENV=production` y una `MEMORY_DB_PATH` absoluta en almacenamiento persistente.
+Consultar la [guía de preparación](./Documentacion/PREPARACION_PRODUCCION.md):
+los hashes para cuentas nuevas y los límites por usuario siguen pendientes antes de
+permitir acceso público.
 
 ## Estado actual
 

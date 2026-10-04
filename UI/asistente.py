@@ -1,4 +1,5 @@
 import logging
+from uuid import uuid4
 
 import streamlit as st
 
@@ -31,14 +32,14 @@ def initialize_system():
 
 
 def ask_assistant(
-    question: str,
+    question: str | list[dict],
     tono: str,
     modo_aprendizaje: str,
     session_id: str,
 ) -> tuple[str, list[dict]]:
     """Procesa una pregunta utilizando LangGraph."""
 
-    clean_question = question.strip()
+    clean_question = question.strip() if isinstance(question, str) else question
 
     if not clean_question:
         return (
@@ -76,11 +77,12 @@ def ask_assistant(
         return response, []
 
     except Exception as error:
-        logger.exception("Error al procesar la consulta.")
+        reference = uuid4().hex[:12]
+        logger.error("Consulta fallida; referencia=%s; tipo=%s", reference, type(error).__name__)
 
         return (
             "No pude procesar tu pregunta en este momento. "
-            f"Detalle tecnico: {error}",
+            f"Inténtalo de nuevo. Referencia: {reference}",
             [],
         )
 
@@ -97,7 +99,7 @@ def get_assistant_info() -> dict:
     }
 
 
-def get_recent_conversation(session_id: str) -> list[dict[str, str]]:
+def get_recent_conversation(session_id: str) -> list[dict]:
     """Recupera mensajes recientes persistidos para reconstruir la UI."""
 
     return get_recent_messages_for_ui(

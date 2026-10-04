@@ -2,6 +2,7 @@ import logging
 from operator import add
 from typing import Annotated, Optional, TypedDict
 
+from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -9,7 +10,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from Prompts.classifier_prompt import CLASSIFIER_SYSTEM_PROMPT
-from Models.config import MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE
+from Models.config import (MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE,
+                           MODEL_TIMEOUT_SECONDS, MODEL_MAX_RETRIES, MODEL_MAX_TOKENS)
 from Prompts.prompt import PROGRAMMING_TEMPLATE
 from Services.conversation_memory import SQLiteLimitedChatMessageHistory
 
@@ -25,7 +27,7 @@ VALID_CATEGORIES = {
 
 
 class LearningAssistantState(TypedDict):
-    question: str
+    question: str | list[dict]
     session_id: str
     tono: str
     modo_aprendizaje: str
@@ -41,7 +43,9 @@ class LearningAssistantGraph:
         self.llm = ChatOpenAI(
             model=MODEL_NAME,
             temperature=TEMPERATURE,
-            max_retries=2,
+            max_retries=MODEL_MAX_RETRIES,
+            timeout=MODEL_TIMEOUT_SECONDS,
+            max_tokens=MODEL_MAX_TOKENS,
         )
         self.memory_store: dict[str, SQLiteLimitedChatMessageHistory] = {}
         self.classifier_chain = self._build_classifier_chain()
@@ -52,7 +56,7 @@ class LearningAssistantGraph:
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", CLASSIFIER_SYSTEM_PROMPT),
-                ("human", "{question}"),
+                MessagesPlaceholder(variable_name="input_messages"),
             ]
         )
 
@@ -63,7 +67,7 @@ class LearningAssistantGraph:
             [
                 ("system", PROGRAMMING_TEMPLATE),
                 MessagesPlaceholder(variable_name="history"),
-                ("human", "{question}"),
+                MessagesPlaceholder(variable_name="input_messages"),
             ]
         )
         chain = prompt_template | self.llm | StrOutputParser()
@@ -71,7 +75,7 @@ class LearningAssistantGraph:
         return RunnableWithMessageHistory(
             chain,
             self.get_session_history,
-            input_messages_key="question",
+            input_messages_key="input_messages",
             history_messages_key="history",
         )
 
@@ -125,7 +129,7 @@ class LearningAssistantGraph:
         state: LearningAssistantState,
     ) -> dict:
         raw_category = self.classifier_chain.invoke(
-            {"question": state["question"]}
+            {"input_messages": [HumanMessage(content=state["question"])]}
         )
         category = self._normalize_category(raw_category)
 
@@ -208,7 +212,7 @@ class LearningAssistantGraph:
     ) -> str:
         return self.chain_with_memory.invoke(
             {
-                "question": state["question"],
+                "input_messages": [HumanMessage(content=state["question"])],
                 "tono": state["tono"],
                 "modo_aprendizaje": state["modo_aprendizaje"],
                 "tipo_consulta": tipo_consulta,
@@ -222,13 +226,13 @@ class LearningAssistantGraph:
 
     def invoke(
         self,
-        question: str,
+        question: str | list[dict],
         tono: str,
         modo_aprendizaje: str,
         session_id: str,
     ) -> LearningAssistantState:
         initial_state: LearningAssistantState = {
-            "question": question.strip(),
+            "question": question.strip() if isinstance(question, str) else question,
             "session_id": session_id,
             "tono": tono,
             "modo_aprendizaje": modo_aprendizaje,
