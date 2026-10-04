@@ -70,7 +70,7 @@ Las pruebas cubren precedencia del entorno, valores inválidos, ruta obligatoria
 
 ## Requisitos aún pendientes antes de acceso público
 
-- Reemplazar las contraseñas en texto plano por hashes seguros y migrar usuarios existentes con respaldo previo. Esta fase no altera la base de datos ni el esquema de usuarios.
+- Implementar hashes seguros para las cuentas nuevas. Producción comenzará con una base vacía, sin migrar los usuarios existentes; la base local se conserva. Esta fase no altera la base de datos ni el esquema de usuarios.
 - Limitar intentos de inicio de sesión, registro y consumo por usuario.
 - Configurar servicio con reinicio, HTTPS, proxy, firewall y actualizaciones del VPS.
 - Preparar respaldos externos y probar su restauración.
