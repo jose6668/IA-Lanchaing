@@ -5,3 +5,17 @@ __pycache__/
 .DS_Store
 conversation_memory.sqlite
 conversation_memory.sqlite-*
+.venv/
+.env.*
+!.env.example
+.streamlit/secrets.toml
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+data/
+backups/
+*.log
+.pytest_cache/

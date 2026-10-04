@@ -5,3 +5,21 @@ backgroundColor = "#F7FBFA"
 secondaryBackgroundColor = "#E7F0EA"
 textColor = "#173642"
 font = "sans serif"
+
+[server]
+headless = true
+address = "127.0.0.1"
+port = 8501
+enableCORS = true
+enableXsrfProtection = true
+maxUploadSize = 5
+maxMessageSize = 25
+fileWatcherType = "none"
+runOnSave = false
+
+[client]
+showErrorDetails = "none"
+toolbarMode = "viewer"
+
+[browser]
+gatherUsageStats = false

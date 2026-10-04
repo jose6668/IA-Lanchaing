@@ -1,4 +1,5 @@
 import logging
+from uuid import uuid4
 
 import streamlit as st
 
@@ -76,11 +77,12 @@ def ask_assistant(
         return response, []
 
     except Exception as error:
-        logger.exception("Error al procesar la consulta.")
+        reference = uuid4().hex[:12]
+        logger.error("Consulta fallida; referencia=%s; tipo=%s", reference, type(error).__name__)
 
         return (
             "No pude procesar tu pregunta en este momento. "
-            f"Detalle tecnico: {error}",
+            f"Inténtalo de nuevo. Referencia: {reference}",
             [],
         )
 

@@ -10,7 +10,8 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from Prompts.classifier_prompt import CLASSIFIER_SYSTEM_PROMPT
-from Models.config import MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE
+from Models.config import (MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE,
+                           MODEL_TIMEOUT_SECONDS, MODEL_MAX_RETRIES, MODEL_MAX_TOKENS)
 from Prompts.prompt import PROGRAMMING_TEMPLATE
 from Services.conversation_memory import SQLiteLimitedChatMessageHistory
 
@@ -42,7 +43,9 @@ class LearningAssistantGraph:
         self.llm = ChatOpenAI(
             model=MODEL_NAME,
             temperature=TEMPERATURE,
-            max_retries=2,
+            max_retries=MODEL_MAX_RETRIES,
+            timeout=MODEL_TIMEOUT_SECONDS,
+            max_tokens=MODEL_MAX_TOKENS,
         )
         self.memory_store: dict[str, SQLiteLimitedChatMessageHistory] = {}
         self.classifier_chain = self._build_classifier_chain()

@@ -1,17 +1,13 @@
-# Dependencias principales del asistente educativo
-streamlit>=1.63,<2
-
-# LangChain, LangGraph y conectores
-langchain
-langchain-core
-langchain-openai
-langgraph
-
-# Modelos y tokenizacion de OpenAI
-openai
-tiktoken
-
-# Lectura de adjuntos
-pypdf>=5,<7
-python-docx>=1.1,<2
-Pillow>=10,<13
+# Dependencias directas verificadas con Python 3.12.
+# Para instalación reproducible utiliza requirements.lock.txt.
+streamlit==1.63.0
+langchain==1.3.18
+langchain-core==1.6.1
+langchain-openai==1.6.0
+langgraph==1.2.11
+openai==3.7.0
+tiktoken==0.14.0
+pypdf==6.19.0
+python-docx==1.2.0
+Pillow==12.3.0
+python-dotenv==1.2.2
