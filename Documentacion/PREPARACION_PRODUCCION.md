@@ -68,9 +68,12 @@ git diff --check
 
 Las pruebas cubren precedencia del entorno, valores inválidos, ruta obligatoria en producción, ausencia de clave, errores sin secretos, chats, adjuntos y memoria multimodal. No realizan llamadas reales al modelo.
 
+## Contraseñas
+
+- Las contraseñas de cuentas nuevas se guardan con PBKDF2-HMAC-SHA256, sal aleatoria única y 600 000 iteraciones. Las cuentas de bases locales antiguas conservan acceso y se rehashan al iniciar sesión correctamente. Producción comienza con una base vacía, sin trasladar usuarios existentes.
+
 ## Requisitos aún pendientes antes de acceso público
 
-- Implementar hashes seguros para las cuentas nuevas. Producción comenzará con una base vacía, sin migrar los usuarios existentes; la base local se conserva. Esta fase no altera la base de datos ni el esquema de usuarios.
 - Limitar intentos de inicio de sesión, registro y consumo por usuario.
 - Configurar servicio con reinicio, HTTPS, proxy, firewall y actualizaciones del VPS.
 - Preparar respaldos externos y probar su restauración.

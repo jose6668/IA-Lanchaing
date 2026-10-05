@@ -199,8 +199,8 @@ Abrir `http://localhost:8501`. La app escucha solo en la interfaz local y requie
 reiniciarse después de cambiar archivos o configuración. Para producción, definir
 `APP_ENV=production` y una `MEMORY_DB_PATH` absoluta en almacenamiento persistente.
 Consultar la [guía de preparación](./Documentacion/PREPARACION_PRODUCCION.md):
-los hashes para cuentas nuevas y los límites por usuario siguen pendientes antes de
-permitir acceso público.
+las contraseñas ahora se guardan con hash seguro; los límites por usuario siguen
+pendientes antes de permitir acceso público.
 
 ## Estado actual
 
