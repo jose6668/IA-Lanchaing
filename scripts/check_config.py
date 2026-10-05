@@ -26,7 +26,7 @@ def main() -> int:
                     raise ConfigurationError('La base de datos necesita revisión de integridad.')
         print(f'Configuración válida ({APP_ENV}). Almacenamiento accesible.')
         print('La clave está configurada; no se ha comprobado su validez con el proveedor.')
-        print('Pendiente antes del acceso público: hashes de contraseñas, límites por usuario, HTTPS y respaldos.')
+        print('Pendiente antes del acceso público: límites por usuario, HTTPS y respaldos.')
         return 0
     except Exception as error:
         # Only explicitly safe configuration messages may be printed.
