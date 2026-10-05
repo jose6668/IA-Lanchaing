@@ -11,7 +11,13 @@ sys.path.insert(0, str(ROOT))
 
 def main() -> int:
     try:
-        from Models.config import APP_ENV, MEMORY_DB_PATH, ConfigurationError, validate_api_key
+        from Models.config import (
+            APP_ENV,
+            MAX_DAILY_MESSAGES_PER_USER,
+            MEMORY_DB_PATH,
+            ConfigurationError,
+            validate_api_key,
+        )
         validate_api_key()
         parent = MEMORY_DB_PATH.parent
         if not parent.is_dir():
@@ -25,8 +31,9 @@ def main() -> int:
                 if connection.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
                     raise ConfigurationError('La base de datos necesita revisión de integridad.')
         print(f'Configuración válida ({APP_ENV}). Almacenamiento accesible.')
+        print(f'Límite diario por cuenta: {MAX_DAILY_MESSAGES_PER_USER} consultas.')
         print('La clave está configurada; no se ha comprobado su validez con el proveedor.')
-        print('Pendiente antes del acceso público: límites por usuario, HTTPS y respaldos.')
+        print('Pendiente antes del acceso público: HTTPS y respaldos externos.')
         return 0
     except Exception as error:
         # Only explicitly safe configuration messages may be printed.

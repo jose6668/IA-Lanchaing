@@ -4,6 +4,7 @@ import hmac
 import re
 import secrets
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -102,6 +103,28 @@ class UserManager:
 
         return row is not None
 
+    def consume_daily_message(self, username: str, daily_limit: int) -> bool:
+        """Atomically reserve one model request within the user's UTC-day quota."""
+        today = datetime.now(timezone.utc).date().isoformat()
+        with self._connect() as connection:
+            cursor = connection.execute(
+                """
+                INSERT INTO daily_usage (username, usage_date, message_count)
+                VALUES (?, ?, 1)
+                ON CONFLICT(username) DO UPDATE SET
+                    usage_date = excluded.usage_date,
+                    message_count = CASE
+                        WHEN daily_usage.usage_date = excluded.usage_date
+                        THEN daily_usage.message_count + 1
+                        ELSE 1
+                    END
+                WHERE daily_usage.usage_date <> excluded.usage_date
+                   OR daily_usage.message_count < ?
+                """,
+                (username, today, daily_limit),
+            )
+            return cursor.rowcount == 1
+
     def validate_user_data(
         self,
         name: str,
@@ -137,6 +160,15 @@ class UserManager:
                     username TEXT NOT NULL UNIQUE,
                     password TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS daily_usage (
+                    username TEXT PRIMARY KEY,
+                    usage_date TEXT NOT NULL,
+                    message_count INTEGER NOT NULL DEFAULT 0
                 )
                 """
             )
