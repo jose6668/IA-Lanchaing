@@ -3,7 +3,7 @@ from html import escape
 from Services.attachments import ALLOWED_EXTENSIONS, AttachmentError, build_content
 from UI.theme import ICON_PATH, apply_theme, brand, icon_uri
 
-from Models.config import MEMORY_DB_PATH
+from Models.config import MAX_DAILY_MESSAGES_PER_USER, MEMORY_DB_PATH
 from Services.chat_manager import ChatManager
 from Services.user_manager import UserManager
 from UI.asistente import (
@@ -337,6 +337,14 @@ if submission or pending_prompt:
         st.stop()
     if not user_input:
         st.stop()
+    if not user_manager.consume_daily_message(
+        st.session_state.current_user["username"], MAX_DAILY_MESSAGES_PER_USER
+    ):
+        st.error(
+            f"Llegaste al límite de {MAX_DAILY_MESSAGES_PER_USER} consultas por día. "
+            "Puedes volver a intentarlo mañana."
+        )
+        st.stop()
     if not st.session_state.current_chat_id:
         new_chat = chat_manager.create_chat(st.session_state.current_user["username"])
         set_current_chat(new_chat["chat_id"])
@@ -375,4 +383,3 @@ if submission or pending_prompt:
     )
 
     st.rerun()
-

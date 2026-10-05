@@ -35,6 +35,7 @@ La app carga `.env` desde la raíz del proyecto, independientemente del director
 | `MODEL_MAX_RETRIES` | `2` | Reintentos por petición, entre 0 y 5. |
 | `MODEL_MAX_TOKENS` | `1500` | Límite de salida por llamada, entre 64 y 8192. |
 | `MAX_HISTORY_MESSAGES` | `20` | Mensajes conservados por chat, entre 2 y 100. |
+| `MAX_DAILY_MESSAGES_PER_USER` | `25` | Consultas al modelo permitidas por cuenta y día UTC, entre 1 y 500. |
 | `MEMORY_DB_PATH` | Vacío en desarrollo | Ruta SQLite. En producción debe ser absoluta y persistente. |
 
 Cambiar de modelo puede requerir otros parámetros del proveedor. Los límites de salida y tiempo no sustituyen cuotas por usuario ni un presupuesto de gasto. Cada consulta utiliza clasificación y respuesta, y cada petición puede reintentarse.
@@ -72,9 +73,11 @@ Las pruebas cubren precedencia del entorno, valores inválidos, ruta obligatoria
 
 - Las contraseñas de cuentas nuevas se guardan con PBKDF2-HMAC-SHA256, sal aleatoria única y 600 000 iteraciones. Las cuentas de bases locales antiguas conservan acceso y se rehashan al iniciar sesión correctamente. Producción comienza con una base vacía, sin trasladar usuarios existentes.
 
+La app reserva cada consulta antes de llamar al modelo y limita el uso a 25 al día por cuenta de forma predeterminada. El límite se guarda en la base SQLite y se puede ajustar con `MAX_DAILY_MESSAGES_PER_USER`.
+
 ## Requisitos aún pendientes antes de acceso público
 
-- Limitar intentos de inicio de sesión, registro y consumo por usuario.
+- Limitar intentos de inicio de sesión y abuso de registros.
 - Configurar servicio con reinicio, HTTPS, proxy, firewall y actualizaciones del VPS.
 - Preparar respaldos externos y probar su restauración.
 - Probar instalación Linux, concurrencia y consumo con documentos e imágenes reales.
