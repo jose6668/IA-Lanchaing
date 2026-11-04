@@ -2,7 +2,6 @@ import logging
 from operator import add
 from typing import Annotated, Optional, TypedDict
 
-from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -10,8 +9,9 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from Models.classifier_prompt import CLASSIFIER_SYSTEM_PROMPT
-from Models.config import MODEL_NAME, TEMPERATURE
+from Models.config import MAX_HISTORY_MESSAGES, MEMORY_DB_PATH, MODEL_NAME, TEMPERATURE
 from Prompts.prompt import PROGRAMMING_TEMPLATE
+from Services.conversation_memory import SQLiteLimitedChatMessageHistory
 
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class LearningAssistantGraph:
             temperature=TEMPERATURE,
             max_retries=2,
         )
-        self.memory_store: dict[str, InMemoryChatMessageHistory] = {}
+        self.memory_store: dict[str, SQLiteLimitedChatMessageHistory] = {}
         self.classifier_chain = self._build_classifier_chain()
         self.chain_with_memory = self._build_memory_chain()
         self.graph = self._build_graph()
@@ -75,9 +75,13 @@ class LearningAssistantGraph:
             history_messages_key="history",
         )
 
-    def get_session_history(self, session_id: str) -> InMemoryChatMessageHistory:
+    def get_session_history(self, session_id: str) -> SQLiteLimitedChatMessageHistory:
         if session_id not in self.memory_store:
-            self.memory_store[session_id] = InMemoryChatMessageHistory()
+            self.memory_store[session_id] = SQLiteLimitedChatMessageHistory(
+                session_id=session_id,
+                db_path=MEMORY_DB_PATH,
+                max_messages=MAX_HISTORY_MESSAGES,
+            )
 
         return self.memory_store[session_id]
 
