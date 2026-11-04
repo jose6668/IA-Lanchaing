@@ -194,6 +194,9 @@ Implementado:
 - Memoria temporal por sesion.
 - Memoria persistente local por `session_id`.
 - Limite de 20 mensajes guardados por sesion.
+- Registro e inicio de sesion local.
+- Multiples chats por usuario.
+- Historial separado por usuario y chat.
 - Restriccion amable de consultas fuera de programacion.
 - Documentacion tecnica actualizada.
 
