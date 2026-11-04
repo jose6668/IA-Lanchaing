@@ -1,4 +1,6 @@
 import streamlit as st
+from html import escape
+from UI.theme import ICON_PATH, apply_theme, brand, icon_uri
 
 from Models.config import MEMORY_DB_PATH
 from Services.chat_manager import ChatManager
@@ -11,181 +13,11 @@ from UI.asistente import (
 
 st.set_page_config(
     page_title="Asistente de Programación",
-    page_icon="💻",
+    page_icon=str(ICON_PATH),
     layout="wide",
 )
 
-st.markdown(
-    """
-    <style>
-        :root {
-            --color-celeste: #95D1DC;
-            --color-menta: #E7F0EA;
-            --color-azul: #1A77A3;
-            --color-azul-oscuro: #155F82;
-            --color-superficie: #F7FBFA;
-            --color-texto: #173642;
-            --color-borde: rgba(149, 209, 220, 0.75);
-        }
-
-        .stApp {
-            background:
-                linear-gradient(180deg, #E7F0EA 0%, #F7FBFA 34%, #FFFFFF 100%);
-            color: var(--color-texto);
-        }
-
-        [data-testid="stHeader"],
-        [data-testid="stToolbar"],
-        [data-testid="stDecoration"],
-        [data-testid="stBottom"] {
-            background: var(--color-superficie) !important;
-        }
-
-        [data-testid="stAppViewContainer"],
-        [data-testid="stMain"],
-        [data-testid="stBottom"] > div,
-        [data-testid="stBottom"] > div > div,
-        [data-testid="stBottom"] section,
-        [data-testid="stBottom"] form,
-        .stChatFloatingInputContainer,
-        div:has(> [data-testid="stChatInput"]),
-        div:has([data-testid="stChatInput"]) {
-            background: var(--color-superficie) !important;
-        }
-
-        h1, h2, h3 {
-            color: var(--color-azul);
-        }
-
-        p, li, label, span, div {
-            color: var(--color-texto);
-        }
-
-        [data-testid="stMarkdownContainer"] p,
-        [data-testid="stMarkdownContainer"] li {
-            color: var(--color-texto) !important;
-            line-height: 1.7;
-        }
-
-        [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #E7F0EA 0%, #F8FCFB 100%);
-            border-right: 4px solid var(--color-celeste);
-        }
-
-        [data-testid="stSidebar"] h1,
-        [data-testid="stSidebar"] h2,
-        [data-testid="stSidebar"] h3,
-        [data-testid="stSidebar"] .stMarkdown strong {
-            color: var(--color-azul);
-        }
-
-        .sidebar-guide {
-            background: rgba(255, 255, 255, 0.72);
-            border: 1px solid var(--color-borde);
-            border-left: 5px solid var(--color-azul);
-            border-radius: 8px;
-            padding: 1rem;
-            color: var(--color-texto);
-            line-height: 1.65;
-        }
-
-        .sidebar-guide strong {
-            color: var(--color-azul);
-        }
-
-        .stButton > button {
-            background-color: var(--color-azul);
-            border: 1px solid var(--color-azul);
-            color: #FFFFFF;
-            font-weight: 600;
-        }
-
-        .stButton > button:hover {
-            background-color: var(--color-azul-oscuro);
-            border-color: var(--color-azul-oscuro);
-            color: #FFFFFF;
-        }
-
-        [data-testid="stAlert"] {
-            background-color: rgba(149, 209, 220, 0.28);
-            border-radius: 8px;
-            border-left: 5px solid var(--color-celeste);
-        }
-
-        [data-testid="stAlert"] *,
-        [data-testid="stAlert"] p,
-        [data-testid="stAlert"] li {
-            color: var(--color-texto) !important;
-        }
-
-        [data-testid="stChatMessage"] {
-            background-color: rgba(255, 255, 255, 0.78);
-            border-left: 5px solid var(--color-celeste);
-            border-radius: 8px;
-            padding: 0.65rem;
-            box-shadow: 0 8px 22px rgba(26, 119, 163, 0.07);
-        }
-
-        [data-testid="stChatMessage"] p,
-        [data-testid="stChatMessage"] li,
-        [data-testid="stChatMessage"] code {
-            color: var(--color-texto) !important;
-        }
-
-        [data-testid="stChatMessage"]:has(
-            [data-testid="chatAvatarIcon-user"]
-        ) {
-            border-left-color: var(--color-azul);
-        }
-
-        [data-testid="stChatInput"] {
-            background: var(--color-superficie) !important;
-            border-top: 0;
-            padding-bottom: 0.75rem;
-        }
-
-        [data-testid="stChatInput"] > div {
-            background-color: #FFFFFF !important;
-            border: 2px solid var(--color-celeste) !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stChatInput"] textarea {
-            background-color: #FFFFFF !important;
-            color: var(--color-texto) !important;
-        }
-
-        [data-testid="stChatInput"] button {
-            color: var(--color-azul) !important;
-        }
-
-        [data-testid="stTextInput"] input {
-            background-color: #FFFFFF !important;
-            color: var(--color-texto) !important;
-            border: 1px solid var(--color-borde) !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stTextInput"] input::placeholder {
-            color: rgba(23, 54, 66, 0.58) !important;
-        }
-
-        [data-testid="stTextInput"] button {
-            color: var(--color-azul) !important;
-        }
-
-        hr {
-            border-color: rgba(26, 119, 163, 0.22);
-        }
-
-        .palette-footer {
-            color: var(--color-azul);
-            font-weight: 600;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+apply_theme()
 
 DEFAULT_ASSISTANT_TONE = "Normal, claro y amigable"
 DEFAULT_LEARNING_MODE = "Aprendizaje guiado"
@@ -256,19 +88,17 @@ def logout() -> None:
 
 
 def render_auth_screen() -> None:
-    st.title("💻 Asistente para Aprender Programación")
-    st.caption("Inicia sesión o crea un usuario para comenzar.")
-    st.divider()
+    st.markdown('<div class="auth-heading">' + brand() + '<h1>Tu próxima idea empieza aquí</h1><p>Aprende programación a tu ritmo, con un tutor que te acompaña.</p></div>', unsafe_allow_html=True)
+    with st.container(key="auth_card"):
+        st.session_state.auth_mode = st.radio(
+            "Acceso", ["Iniciar sesión", "Crear usuario"],
+            key="auth_mode_selector", horizontal=True, label_visibility="collapsed",
+        )
+        render_auth_form()
+        st.caption("Aprende · Practica · Construye")
 
-    st.session_state.auth_mode = st.radio(
-        "Acceso",
-        ["Iniciar sesión", "Crear usuario"],
-        key="auth_mode_selector",
-        horizontal=True,
-        index=0 if st.session_state.auth_mode == "Iniciar sesión" else 1,
-        label_visibility="collapsed",
-    )
 
+def render_auth_form() -> None:
     if st.session_state.auth_mode == "Iniciar sesión":
         st.subheader("Iniciar sesión")
 
@@ -281,9 +111,10 @@ def render_auth_screen() -> None:
             password = st.text_input(
                 "Contraseña",
                 type="password",
+                placeholder="Ingresa tu contraseña",
                 key="login_password",
             )
-            login_submitted = st.form_submit_button("Iniciar sesión")
+            login_submitted = st.form_submit_button("Acceder →", type="primary", use_container_width=True)
 
             if login_submitted:
                 success, user, message = user_manager.authenticate(
@@ -323,7 +154,7 @@ def render_auth_screen() -> None:
                 type="password",
                 key="register_confirm_password",
             )
-            register_submitted = st.form_submit_button("Crear usuario")
+            register_submitted = st.form_submit_button("Crear usuario →", type="primary", use_container_width=True)
 
             if register_submitted:
                 if password != confirm_password:
@@ -356,25 +187,10 @@ def render_sidebar() -> None:
     user = st.session_state.current_user
 
     with st.sidebar:
-        st.header("Guía de uso")
-
-        st.markdown(
-            """
-            <div class="sidebar-guide">
-                <strong>Este asistente te ayuda a aprender programación.</strong>
-                Escribe una pregunta, comparte una duda o pega un fragmento de
-                código. Recibirás orientación paso a paso, con pistas y preguntas
-                para que puedas construir la solución por tu cuenta.
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.divider()
-        st.subheader("Chats")
-
+        st.markdown(brand(), unsafe_allow_html=True)
+        st.write("")
         if st.button(
-            "Nuevo chat",
+            "＋ Nuevo chat",
             type="primary",
             use_container_width=True,
             key="new_chat_button",
@@ -383,6 +199,7 @@ def render_sidebar() -> None:
             set_current_chat(new_chat["chat_id"])
             st.rerun()
 
+        st.markdown('<div class="eyebrow">CONVERSACIONES</div>', unsafe_allow_html=True)
         chats = chat_manager.list_chats(user["username"])
 
         if chats:
@@ -392,7 +209,7 @@ def render_sidebar() -> None:
 
                 if st.button(
                     label,
-                    type="secondary" if is_active else "secondary",
+                    type="primary" if is_active else "secondary",
                     use_container_width=True,
                     key=f"chat_{chat['chat_id']}",
                 ):
@@ -430,6 +247,8 @@ def render_sidebar() -> None:
             st.session_state.messages = []
             st.rerun()
 
+        st.markdown('<div class="sidebar-guide"><strong>💡 Guía de uso</strong><p>Pregunta, comparte código o pide ejemplos. Te acompañamos con pistas y explicaciones paso a paso.</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="profile"><span class="avatar">{escape(user["name"][:1].upper())}</span><div><strong>{escape(user["name"])}</strong><small>Estudiante</small></div></div>', unsafe_allow_html=True)
         if st.button(
             "Cerrar sesión",
             use_container_width=True,
@@ -441,22 +260,30 @@ def render_sidebar() -> None:
 
 def render_user_header() -> None:
     user = st.session_state.current_user
-    left, right = st.columns([3, 1])
+    st.markdown(f"""
+        <div class="topline"><span>Tu espacio de aprendizaje</span><span class="user-pill">{escape(user['name'])} · Estudiante</span></div>
+        <section class="welcome">
+            <div><div class="eyebrow">APRENDE A CREAR</div><h1>¡Hola, {escape(user['name'])}!</h1>
+            <h2>¿Qué quieres aprender hoy?</h2><p>Tu asistente de programación, listo para ayudarte paso a paso.</p></div>
+            <img src="{icon_uri()}" alt="Robot tutor de programación" />
+        </section>
+    """, unsafe_allow_html=True)
 
-    with left:
-        st.title("💻 Asistente para Aprender Programación")
-        st.caption("Tutor educativo guiado para aprender programación paso a paso")
 
-    with right:
-        st.markdown(
-            f"""
-            <div style="text-align: right; font-weight: 700; color: #1A77A3;">
-                {user["name"]}<br>
-                <span style="font-weight: 500;">@{user["username"]}</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+def render_topics() -> None:
+    topics = [
+        ("🐍", "Python", "Aprende desde cero con ejemplos prácticos.", "Quiero aprender Python desde cero. ¿Por dónde empiezo?"),
+        ("🎮", "Videojuegos", "Da vida a tus ideas con código.", "¿Cómo puedo programar mi primer videojuego?"),
+        ("🤖", "Robótica", "Conecta programación y creatividad.", "Explícame cómo empezar a programar un proyecto con Arduino."),
+        ("💡", "Dudas rápidas", "Resuelve una duda, paso a paso.", "¿Cómo puedo dividir un problema de programación en pasos?"),
+    ]
+    for column, (symbol, title, description, prompt) in zip(st.columns(4), topics):
+        with column, st.container(key="topic_" + title):
+            st.markdown(f'<div class="topic-icon">{symbol}</div><h3>{title}</h3><p>{description}</p>', unsafe_allow_html=True)
+            if st.button(f"Explorar {title} →", key="choose_" + title, use_container_width=True):
+                st.session_state.pending_prompt = prompt
+
+
 
 
 init_session_state()
@@ -469,64 +296,25 @@ if not st.session_state.current_user:
 
 render_sidebar()
 render_user_header()
-st.divider()
+render_topics()
 
-if not st.session_state.current_chat_id:
-    st.info("Crea o selecciona un chat en la barra lateral para comenzar.")
-    st.stop()
+if not st.session_state.messages:
+    st.markdown("""<section class="empty-chat"><div class="bubble-art">〈 / 〉</div>
+        <h3>Comienza una conversación</h3><p>Escribe tu pregunta abajo o elige un tema para empezar.<br>
+        Vamos a aprender programación de forma clara y sencilla.</p></section>""", unsafe_allow_html=True)
 
+for message in st.session_state.messages:
+    with st.chat_message(message["role"], avatar=str(ICON_PATH) if message["role"] == "assistant" else None):
+        st.markdown(message["content"])
 
-chat_column, topics_column = st.columns(
-    [2, 1]
-)
-
-with chat_column:
-    st.markdown(
-        "### 💬 Chat de aprendizaje"
-    )
-
-    if not st.session_state.messages:
-        st.info(
-            "Escribe una pregunta de programación "
-            "o comparte un fragmento de código para recibir ayuda guiada."
-        )
-
-    for message in st.session_state.messages:
-        with st.chat_message(
-            message["role"]
-        ):
-            st.markdown(
-                message["content"]
-            )
-
-
-with topics_column:
-    st.markdown(
-        "### 📚 Temas sugeridos"
-    )
-
-    st.info(
-        """
-        Puedes preguntar:
-
-        - ¿Qué es una variable?
-        - ¿Qué es un ciclo `for`?
-        - ¿Cómo funciona un `if`?
-        - Explícame las listas en Python.
-        - Ayúdame a corregir este código.
-        - ¿Cómo divido este problema en pasos?
-        - ¿Qué debo revisar antes de ejecutar mi programa?
-        """
-    )
-
-
-
-user_input = st.chat_input(
-    "Escribe tu pregunta sobre programación...",
-    key="main_chat_input",
-)
+st.markdown('<div class="palette-footer">Asistente de Programación · Aprende hoy, construye el mañana.</div>', unsafe_allow_html=True)
+user_input = st.chat_input("Escribe tu pregunta aquí…", key="main_chat_input")
+user_input = user_input or st.session_state.pop("pending_prompt", None)
 
 if user_input:
+    if not st.session_state.current_chat_id:
+        new_chat = chat_manager.create_chat(st.session_state.current_user["username"])
+        set_current_chat(new_chat["chat_id"])
     if not st.session_state.session_id:
         load_current_chat_messages()
 
@@ -562,17 +350,4 @@ if user_input:
     )
 
     st.rerun()
-
-
-
-st.divider()
-
-st.markdown(
-    """
-    <div class="palette-footer" style="text-align: center;">
-        💻 Asistente educativo de programación
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
